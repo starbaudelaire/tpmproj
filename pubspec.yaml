@@ -1,0 +1,69 @@
+name: jogjasplorasi
+description: Premium Yogyakarta tourism app - iOS Liquid Glass UI
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  go_router: ^16.2.0
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  hive_flutter: ^1.1.0
+  hive: ^2.2.3
+  flutter_secure_storage: ^9.2.4
+  local_auth: ^2.3.0
+  encrypt: ^5.0.3
+  crypto: ^3.0.6
+  dio: ^5.9.0
+  connectivity_plus: ^6.1.5
+  geolocator: ^14.0.2
+  url_launcher: ^6.3.2
+  sensors_plus: ^6.1.2
+  shake: ^3.0.0
+  flutter_local_notifications: ^19.4.2
+  timezone: ^0.10.1
+  glassmorphism: ^3.0.0
+  blur: ^4.0.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  lottie: ^3.3.2
+  fl_chart: ^1.1.0
+  permission_handler: ^12.0.1
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+  path_provider: ^2.1.5
+  uuid: ^4.5.1
+  logger: ^2.6.1
+  get_it: ^8.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/destinations/
+    - assets/images/icons/
+    - assets/images/onboarding/
+    - assets/data/destinations.json
+    - assets/data/quiz_questions.json
+  fonts:
+    - family: SFPro
+      fonts:
+        - asset: assets/fonts/SF-Pro-Display-Regular.otf
+        - asset: assets/fonts/SF-Pro-Display-Bold.otf
+          weight: 700
+        - asset: assets/fonts/SF-Pro-Display-Semibold.otf
+          weight: 600
+        - asset: assets/fonts/SF-Pro-Text-Regular.otf
+        - asset: assets/fonts/SF-Pro-Text-Medium.otf
+          weight: 500

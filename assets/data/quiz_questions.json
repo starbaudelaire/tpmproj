@@ -1,0 +1,14 @@
+[
+  {"id":"q1","question":"Candi Borobudur berada di kabupaten mana?","options":["Magelang","Sleman","Bantul","Kulon Progo"],"correctIndex":0,"category":"Budaya"},
+  {"id":"q2","question":"Jalan Malioboro paling terkenal untuk apa?","options":["Belanja dan kuliner","Mendaki gunung","Snorkeling","Melihat sawah"],"correctIndex":0,"category":"Belanja"},
+  {"id":"q3","question":"Pantai populer untuk sunset di selatan Jogja adalah...","options":["Parangtritis","Indrayanti","Baron","Sadeng"],"correctIndex":0,"category":"Alam"},
+  {"id":"q4","question":"Keraton Yogyakarta merupakan pusat...","options":["Kesultanan","Perkebunan","Pelayaran","Teknologi"],"correctIndex":0,"category":"Budaya"},
+  {"id":"q5","question":"Prambanan dikenal sebagai kompleks candi...","options":["Hindu","Buddha","Katolik","Kolonial"],"correctIndex":0,"category":"Budaya"},
+  {"id":"q6","question":"Zona kreatif dengan banyak kafe dan mural di Jogja adalah...","options":["Prawirotaman","Kotagede","Kasihan","Wates"],"correctIndex":0,"category":"Seni"},
+  {"id":"q7","question":"Waktu terbaik berburu sunrise Borobudur biasanya...","options":["Pagi hari","Siang bolong","Sore","Malam"],"correctIndex":0,"category":"Alam"},
+  {"id":"q8","question":"Kuliner khas Jogja yang identik dengan rasa manis adalah...","options":["Gudeg","Rawon","Pempek","Coto"],"correctIndex":0,"category":"Kuliner"},
+  {"id":"q9","question":"Satuan waktu lokal Yogyakarta adalah...","options":["WIB","WITA","WIT","GMT"],"correctIndex":0,"category":"Praktis"},
+  {"id":"q10","question":"Transportasi populer untuk menjelajahi pusat kota Jogja adalah...","options":["Becak","Gondola","Metro","Tram"],"correctIndex":0,"category":"Aktivitas"},
+  {"id":"q11","question":"Kotagede terkenal dengan kerajinan...","options":["Perak","Rotan","Kaca","Kulit"],"correctIndex":0,"category":"Belanja"},
+  {"id":"q12","question":"Gunung yang tampak indah dari beberapa titik Jogja adalah...","options":["Merapi","Semeru","Rinjani","Bromo"],"correctIndex":0,"category":"Alam"}
+]

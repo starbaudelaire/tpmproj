@@ -1,0 +1,80 @@
+[
+  {
+    "id": "borobudur",
+    "name": "Candi Borobudur",
+    "category": "Budaya",
+    "description": "Mahakarya Buddha abad ke-9 dengan panorama sunrise yang ikonik dan relief bersejarah yang sangat kaya.",
+    "latitude": -7.6079,
+    "longitude": 110.2038,
+    "imageUrl": "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.9,
+    "ticketPrice": "Rp 375.000",
+    "openHours": "06:00 - 17:00",
+    "isFavorite": false
+  },
+  {
+    "id": "keraton",
+    "name": "Keraton Yogyakarta",
+    "category": "Budaya",
+    "description": "Istana Kesultanan Yogyakarta dengan koleksi artefak, arsitektur Jawa, dan pertunjukan budaya.",
+    "latitude": -7.8053,
+    "longitude": 110.3642,
+    "imageUrl": "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.7,
+    "ticketPrice": "Rp 15.000",
+    "openHours": "08:30 - 14:00",
+    "isFavorite": true
+  },
+  {
+    "id": "malioboro",
+    "name": "Malioboro",
+    "category": "Belanja",
+    "description": "Koridor paling terkenal di Yogyakarta untuk kuliner malam, belanja batik, dan suasana kota.",
+    "latitude": -7.7928,
+    "longitude": 110.3658,
+    "imageUrl": "https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "ticketPrice": "Gratis",
+    "openHours": "24 Jam",
+    "isFavorite": false
+  },
+  {
+    "id": "prambanan",
+    "name": "Candi Prambanan",
+    "category": "Budaya",
+    "description": "Kompleks candi Hindu dengan siluet menara tinggi dan panggung Ramayana Ballet yang megah.",
+    "latitude": -7.752,
+    "longitude": 110.4915,
+    "imageUrl": "https://images.unsplash.com/photo-1604999333679-b86d54738315?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.8,
+    "ticketPrice": "Rp 362.500",
+    "openHours": "06:30 - 17:00",
+    "isFavorite": false
+  },
+  {
+    "id": "prawirotaman",
+    "name": "Prawirotaman",
+    "category": "Seni",
+    "description": "Kawasan artsy dengan hotel butik, coffee shop, galeri, dan mural yang hidup.",
+    "latitude": -7.8181,
+    "longitude": 110.368,
+    "imageUrl": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.5,
+    "ticketPrice": "Gratis",
+    "openHours": "24 Jam",
+    "isFavorite": false
+  },
+  {
+    "id": "parangtritis",
+    "name": "Pantai Parangtritis",
+    "category": "Alam",
+    "description": "Pantai legendaris dengan sunset dramatis, gumuk pasir, dan jalur ATV yang seru.",
+    "latitude": -8.0246,
+    "longitude": 110.3297,
+    "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    "rating": 4.6,
+    "ticketPrice": "Rp 10.000",
+    "openHours": "24 Jam",
+    "isFavorite": true
+  }
+]
