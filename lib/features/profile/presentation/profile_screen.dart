@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 126),
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
                     children: [
                       _ProfileHeader(
                         onRefresh: () {
@@ -469,103 +469,6 @@ class _ProfileHero extends StatelessWidget {
     );
   }
 }
-
-class _ProfileStatsRow extends StatelessWidget {
-  const _ProfileStatsRow({
-    required this.bestQuizScore,
-    required this.favoriteCount,
-    required this.destinationCount,
-  });
-
-  final int bestQuizScore;
-  final int favoriteCount;
-  final int destinationCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatTile(
-            icon: CupertinoIcons.star_fill,
-            label: 'Quiz',
-            value: '$bestQuizScore',
-            color: AppColors.accentTertiary,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            icon: CupertinoIcons.heart_fill,
-            label: 'Tersimpan',
-            value: '$favoriteCount',
-            color: AppColors.accentPrimary,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            icon: CupertinoIcons.map_pin_ellipse,
-            label: 'Places',
-            value: '$destinationCount',
-            color: AppColors.accentSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      blur: 30,
-      opacity: 0.072,
-      borderRadius: 22,
-      borderColor: CupertinoColors.white.withOpacity(0.11),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppTypography.displaySemi22.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 22,
-              letterSpacing: -0.55,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.captionSmall11.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ProfileSection extends StatelessWidget {
   const _ProfileSection({
     required this.title,
@@ -811,31 +714,6 @@ class _InlineBadge extends StatelessWidget {
     );
   }
 }
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      blur: 20,
-      opacity: 0.07,
-      borderRadius: 999,
-      borderColor: CupertinoColors.white.withOpacity(0.09),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      child: Text(
-        label,
-        style: AppTypography.captionSmall11.copyWith(
-          color: AppColors.accentTertiary,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-}
-
 class _ProfileData {
   const _ProfileData({
     required this.user,

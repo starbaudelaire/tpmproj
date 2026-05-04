@@ -127,7 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
                 sliver: SliverToBoxAdapter(
                   child: FutureBuilder<String>(
                     future: _usernameFuture,
@@ -150,23 +150,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 132),
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 132),
                 sliver: SliverList.list(
                   children: [
                     const _HomeSearchBar(),
                     const SizedBox(height: 18),
+                    weather.when(
+                      data: (value) => WeatherBanner(weather: value),
+                      loading: () => const LoadingSkeleton(height: 124),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 24),
                     const _SectionHeader(
                       title: 'Menu Utama',
                       subtitle: 'Akses cepat fitur unggulan JogjaSplorasi.',
                     ),
                     const SizedBox(height: 12),
                     const QuickGuideRow(),
-                    const SizedBox(height: 22),
-                    weather.when(
-                      data: (value) => WeatherBanner(weather: value),
-                      loading: () => const LoadingSkeleton(height: 124),
-                      error: (_, __) => const SizedBox.shrink(),
-                    ),
                     const SizedBox(height: 28),
                     const _SectionHeader(
                       title: 'Destinasi Unggulan',

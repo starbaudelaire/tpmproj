@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/destination_display_util.dart';
 import '../../../../shared/models/destination.dart';
 import '../../../../shared/widgets/glass_card.dart';
 
@@ -21,7 +22,7 @@ class InfoStrip extends StatelessWidget {
           child: _InfoTile(
             icon: CupertinoIcons.clock,
             label: 'Open',
-            value: destination.openHours,
+            value: DestinationDisplayUtil.compactOpenHours(destination.openHours),
           ),
         ),
         const SizedBox(width: 10),

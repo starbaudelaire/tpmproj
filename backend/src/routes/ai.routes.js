@@ -62,14 +62,19 @@ router.post('/guide/chat', auth, asyncHandler(async (req, res) => {
     userName: profile?.fullName,
   });
 
-  const reply = llmReply
+  const reply = llmReply?.answer
     ? {
         ...localReply,
         answer: llmReply.answer,
         confidence: llmReply.confidence,
         provider: llmReply.provider,
+        fallbackReason: null,
       }
-    : { ...localReply, provider: 'database-grounded-local' };
+    : {
+        ...localReply,
+        provider: 'database-grounded-local',
+        fallbackReason: llmReply?.fallbackReason || null,
+      };
 
   const citedDestinations = destinations
     .filter((item) => reply.citedDestinationIds.includes(item.id))
@@ -119,9 +124,12 @@ router.post('/guide/chat', auth, asyncHandler(async (req, res) => {
     guardrails: {
       groundedInDatabase: true,
       mode: reply.provider,
-      note: reply.provider === 'openrouter'
-        ? 'Jawaban memakai LLM dan dibatasi oleh konteks destinasi database.'
-        : 'Jawaban memakai fallback lokal dan dibatasi pada data destinasi aktif/terverifikasi.',
+      fallbackReason: reply.fallbackReason,
+      note: reply.provider === 'gemini-database-grounded'
+        ? 'Jawaban memakai Google Gemini dan dibatasi oleh konteks destinasi database JogjaSplorasi.'
+        : reply.provider === 'openrouter-database-grounded'
+          ? 'Jawaban memakai OpenRouter dan dibatasi oleh konteks destinasi database JogjaSplorasi.'
+          : 'Jawaban memakai fallback lokal dan dibatasi pada data destinasi aktif/terverifikasi.',
     },
   });
 }));

@@ -78,7 +78,7 @@ class ExploreScreen extends ConsumerWidget {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 126),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
         physics: const BouncingScrollPhysics(),
         children: [
           _ExploreHeader(
@@ -331,55 +331,87 @@ class _PaginationControls extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: canPrevious ? onPrevious : null,
-            child: GlassCard(
-              blur: 24,
-              opacity: canPrevious ? 0.075 : 0.035,
-              borderRadius: 18,
-              borderColor: CupertinoColors.white.withOpacity(0.08),
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              child: Text(
-                '← Sebelumnya',
-                textAlign: TextAlign.center,
-                style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
-              ),
-            ),
+          flex: 4,
+          child: _PageButton(
+            label: '← Sebelumnya',
+            enabled: canPrevious,
+            onTap: onPrevious,
           ),
         ),
-        const SizedBox(width: 10),
-        GlassCard(
-          blur: 20,
-          opacity: 0.055,
-          borderRadius: 18,
-          borderColor: CupertinoColors.white.withOpacity(0.08),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          child: Text(
-            '$page / $totalPages',
-            style: AppTypography.captionSmall11.copyWith(color: AppColors.textSecondary),
-          ),
-        ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
-          child: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: canNext ? onNext : null,
-            child: GlassCard(
-              blur: 24,
-              opacity: canNext ? 0.075 : 0.035,
-              borderRadius: 18,
-              borderColor: CupertinoColors.white.withOpacity(0.08),
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              child: Text(
-                'Berikutnya →',
-                textAlign: TextAlign.center,
-                style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
+          flex: 2,
+          child: GlassCard(
+            blur: 20,
+            opacity: 0.06,
+            borderRadius: 20,
+            borderColor: CupertinoColors.white.withOpacity(0.09),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            child: Text(
+              '$page / $totalPages',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.textMedium15.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 4,
+          child: _PageButton(
+            label: 'Berikutnya →',
+            enabled: canNext,
+            onTap: onNext,
           ),
         ),
       ],
+    );
+  }
+}
+
+
+class _PageButton extends StatelessWidget {
+  const _PageButton({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      pressedOpacity: enabled ? 0.72 : 1,
+      onPressed: enabled ? onTap : null,
+      child: GlassCard(
+        blur: 24,
+        opacity: enabled ? 0.09 : 0.035,
+        borderRadius: 20,
+        borderColor: CupertinoColors.white.withOpacity(enabled ? 0.11 : 0.06),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.textMedium15.copyWith(
+            color: enabled ? AppColors.textPrimary : AppColors.textSecondary.withOpacity(0.55),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.15,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -512,90 +544,6 @@ class _SearchField extends StatelessWidget {
     );
   }
 }
-
-class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({
-    required this.activeCategory,
-    required this.onSelected,
-  });
-
-  final String? activeCategory;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    const items = <String?>[
-      null,
-      'Budaya',
-      'Alam',
-      'Kuliner',
-      'Belanja',
-      'Seni',
-      'Aktivitas',
-      'Sejarah',
-      'Foto',
-    ];
-
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final value = items[index];
-          final label = value ?? 'Semua';
-          final selected = activeCategory == value;
-
-          return _CategoryChip(
-            label: label,
-            selected: selected,
-            onTap: () => onSelected(value),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      minimumSize: Size.zero,
-      pressedOpacity: 0.75,
-      onPressed: onTap,
-      child: GlassCard(
-        blur: 24,
-        opacity: selected ? 0.11 : 0.065,
-        borderRadius: 999,
-        borderColor: CupertinoColors.white.withOpacity(selected ? 0.16 : 0.09),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Text(
-          label,
-          style: AppTypography.captionSmall11.copyWith(
-            color: selected ? AppColors.textPrimary : AppColors.textSecondary,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.05,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
@@ -628,105 +576,6 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MiniStatusPill extends StatelessWidget {
-  const _MiniStatusPill({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      blur: 24,
-      opacity: 0.06,
-      borderRadius: 999,
-      borderColor: CupertinoColors.white.withOpacity(0.08),
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTypography.captionSmall11.copyWith(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-}
-
-class _CircleToolButton extends StatefulWidget {
-  const _CircleToolButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.active = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool active;
-
-  @override
-  State<_CircleToolButton> createState() => _CircleToolButtonState();
-}
-
-class _CircleToolButtonState extends State<_CircleToolButton> {
-  bool _pressed = false;
-
-  void _setPressed(bool value) {
-    if (_pressed == value) return;
-    setState(() => _pressed = value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _setPressed(true),
-      onTapCancel: () => _setPressed(false),
-      onTapUp: (_) {
-        _setPressed(false);
-        widget.onTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? 0.92 : 1,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOutCubic,
-        child: GlassCard(
-          height: 44,
-          blur: 28,
-          opacity: widget.active ? 0.105 : 0.073,
-          borderRadius: 999,
-          borderColor: CupertinoColors.white.withOpacity(0.11),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.icon,
-                size: 17,
-                color: widget.active
-                    ? AppColors.accentPrimary
-                    : AppColors.textPrimary,
-              ),
-              const SizedBox(width: 7),
-              Text(
-                widget.label,
-                style: AppTypography.captionSmall11.copyWith(
-                  color: widget.active
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

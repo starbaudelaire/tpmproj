@@ -6,6 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/destination_display_util.dart';
 import '../../../shared/models/destination.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/jogja_page_header.dart';
@@ -221,7 +222,7 @@ class _DestinationResultTile extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(destination.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTypography.textMedium15.copyWith(color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Text('${destination.category} • ${destination.address.isEmpty ? 'Jogja' : destination.address}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTypography.captionSmall11.copyWith(color: AppColors.textSecondary)),
+                  Text('${DestinationDisplayUtil.categoryFor(destination)} • ${destination.address.isEmpty ? 'Jogja' : destination.address}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTypography.captionSmall11.copyWith(color: AppColors.textSecondary)),
                 ]),
               ),
             ],

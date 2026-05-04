@@ -25,24 +25,24 @@ class MetricCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: GlassCard(
-        height: 132,
-        padding: const EdgeInsets.all(18),
+        height: 138,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 46,
-              height: 46,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: color.withOpacity(0.16),
                 border: Border.all(color: color.withOpacity(0.28)),
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: Icon(icon, color: color, size: 25),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               label,
               style: AppTypography.captionSmall11.copyWith(color: AppColors.textSecondary),
@@ -53,7 +53,7 @@ class MetricCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               value,
-              style: AppTypography.displaySemi20.copyWith(fontSize: 20),
+              style: AppTypography.displaySemi20.copyWith(fontSize: 18, height: 1.05),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               softWrap: false,

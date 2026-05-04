@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/destination_display_util.dart';
 import '../models/destination.dart';
 import 'glass_card.dart';
 
@@ -108,16 +109,8 @@ class _CompactImageFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final source = '${destination.category} ${destination.type} ${destination.tags.join(' ')}'.toLowerCase();
-    final icon = source.contains('kuliner') || source.contains('culinary')
-        ? CupertinoIcons.flame_fill
-        : source.contains('alam') || source.contains('nature') || source.contains('pantai')
-            ? CupertinoIcons.leaf_arrow_circlepath
-            : source.contains('sejarah') || source.contains('history')
-                ? CupertinoIcons.book_fill
-                : source.contains('foto') || source.contains('photo')
-                    ? CupertinoIcons.camera_fill
-                    : CupertinoIcons.map_fill;
+    final label = DestinationDisplayUtil.categoryFor(destination);
+    final icon = _iconForCategory(label);
 
     return Container(
       width: 74,
@@ -182,18 +175,36 @@ class _CompactFavoriteButtonState extends State<_CompactFavoriteButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: CupertinoColors.white.withOpacity(0.075),
+            color: widget.active
+                ? CupertinoColors.systemPink.withOpacity(0.16)
+                : CupertinoColors.white.withOpacity(0.075),
             border: Border.all(
-              color: CupertinoColors.white.withOpacity(0.11),
+              color: widget.active
+                  ? CupertinoColors.systemPink.withOpacity(0.36)
+                  : CupertinoColors.white.withOpacity(0.11),
             ),
           ),
           child: Icon(
             widget.active ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
             size: 18,
-            color: widget.active ? AppColors.accentPrimary : AppColors.textPrimary,
+            color: widget.active ? CupertinoColors.systemPink : AppColors.textPrimary,
           ),
         ),
       ),
     );
   }
+}
+
+
+IconData _iconForCategory(String category) {
+  final value = category.toLowerCase();
+  if (value.contains('kuliner')) return CupertinoIcons.flame_fill;
+  if (value.contains('alam')) return CupertinoIcons.leaf_arrow_circlepath;
+  if (value.contains('sejarah')) return CupertinoIcons.book_fill;
+  if (value.contains('budaya')) return CupertinoIcons.paintbrush_fill;
+  if (value.contains('seni')) return CupertinoIcons.music_note_2;
+  if (value.contains('belanja')) return CupertinoIcons.bag_fill;
+  if (value.contains('aktivitas')) return CupertinoIcons.bolt_fill;
+  if (value.contains('foto')) return CupertinoIcons.camera_fill;
+  return CupertinoIcons.map_fill;
 }

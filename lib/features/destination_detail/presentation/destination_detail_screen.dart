@@ -9,6 +9,7 @@ import '../../../core/errors/app_error.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/destination_display_util.dart';
 import '../../../shared/models/destination.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../home/data/weather_remote_datasource.dart';
@@ -305,7 +306,7 @@ class _DetailHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _CategoryRatingPill(
-                  category: destination.category,
+                  category: DestinationDisplayUtil.categoryFor(destination),
                   rating: destination.rating,
                 ),
                 const SizedBox(height: 12),

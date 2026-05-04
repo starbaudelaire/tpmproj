@@ -79,7 +79,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 slivers: [
                   CupertinoSliverRefreshControl(onRefresh: _refresh),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 126),
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 126),
                     sliver: SliverList.list(
                       children: [
                         JogjaPageHeader(title: 'Favorit', subtitle: 'Tempat incaranmu tersimpan di sini.'),

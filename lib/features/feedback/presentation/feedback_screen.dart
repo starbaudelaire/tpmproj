@@ -190,7 +190,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 126),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
           children: [
             const JogjaPageHeader(title: 'Saran & Kesan TPM', subtitle: 'Masukanmu tersimpan lokal dan siap dikirim ke backend.'),
             const SizedBox(height: 18),

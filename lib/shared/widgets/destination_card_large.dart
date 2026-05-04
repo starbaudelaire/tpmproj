@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/destination_display_util.dart';
 import '../models/destination.dart';
 import 'glass_card.dart';
 
@@ -151,13 +152,13 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
                                     children: [
                                       _MiniPill(
                                         icon: CupertinoIcons.tag_fill,
-                                        label: _categoryLabel(destination.category, destination.type),
+                                        label: DestinationDisplayUtil.categoryFor(destination),
                                       ),
                                       const SizedBox(width: 7),
                                       Expanded(
                                         child: _MiniPill(
                                           icon: CupertinoIcons.clock_fill,
-                                          label: destination.openHours,
+                                          label: DestinationDisplayUtil.compactOpenHours(destination.openHours),
                                         ),
                                       ),
                                     ],
@@ -206,7 +207,7 @@ class _DestinationImageFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _categoryLabel(destination.category, destination.type);
+    final label = DestinationDisplayUtil.categoryFor(destination);
     final icon = _iconForCategory(label);
     final initials = destination.name.trim().isEmpty
         ? 'JG'
@@ -280,19 +281,6 @@ class _DestinationImageFallback extends StatelessWidget {
       ),
     );
   }
-}
-
-String _categoryLabel(String category, String type) {
-  final source = (category.trim().isNotEmpty ? category : type).toLowerCase();
-  if (source.contains('culture') || source.contains('heritage') || source.contains('budaya')) return 'Budaya';
-  if (source.contains('history') || source.contains('sejarah') || source.contains('museum')) return 'Sejarah';
-  if (source.contains('nature') || source.contains('alam') || source.contains('pantai') || source.contains('goa')) return 'Alam';
-  if (source.contains('culinary') || source.contains('kuliner') || source.contains('food')) return 'Kuliner';
-  if (source.contains('shopping') || source.contains('belanja') || source.contains('gift')) return 'Belanja';
-  if (source.contains('art') || source.contains('seni')) return 'Seni';
-  if (source.contains('activity') || source.contains('aktivitas')) return 'Aktivitas';
-  if (source.contains('photo') || source.contains('foto')) return 'Foto';
-  return category.trim().isEmpty ? 'Wisata' : category;
 }
 
 IconData _iconForCategory(String category) {
@@ -385,9 +373,11 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
           width: 38,
           height: 38,
           blur: 24,
-          opacity: 0.10,
+          opacity: widget.active ? 0.16 : 0.10,
           borderRadius: 999,
-          borderColor: CupertinoColors.white.withOpacity(0.13),
+          borderColor: widget.active
+              ? CupertinoColors.systemPink.withOpacity(0.36)
+              : CupertinoColors.white.withOpacity(0.13),
           padding: EdgeInsets.zero,
           child: Center(
             child: Transform.translate(
@@ -398,7 +388,7 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
                     : CupertinoIcons.heart,
                 size: 19,
                 color: widget.active
-                    ? AppColors.accentPrimary
+                    ? CupertinoColors.systemPink
                     : AppColors.textPrimary,
               ),
             ),

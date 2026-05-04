@@ -1,11 +1,9 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
-import '../../../core/errors/app_error.dart';
 import '../../../core/network/api_client.dart';
 import '../../../shared/models/destination.dart';
 
@@ -37,14 +35,11 @@ class FavoritesLocalDataSource {
           .map((item) => DestinationModel.fromApiJson(item).copyWith(isFavorite: true))
           .toList();
 
-      final remoteIds = favorites.map((item) => item.id).toSet();
-      for (final cached in _box.values.toList()) {
-        if (cached.isFavorite && !remoteIds.contains(cached.id)) {
-          await _box.put(cached.id, cached.copyWith(isFavorite: false));
-        }
-      }
       for (final favorite in favorites) {
-        await _box.put(favorite.id, favorite);
+        await _box.put(
+          favorite.id,
+          favorite.copyWith(isFavorite: true),
+        );
       }
       return getFavorites();
     } catch (_) {
@@ -74,15 +69,11 @@ class FavoritesLocalDataSource {
         await _apiClient.dio.delete('/me/favorites/$id');
       }
       await _removePending(id);
-    } catch (error) {
-      if (_isNetworkOrServerError(error)) {
-        await _savePending(id, value);
-        return;
-      }
-      if (current != null) {
-        await _box.put(id, current.copyWith(isFavorite: !value));
-      }
-      throw AppException(humanizeError(error));
+    } catch (_) {
+      // Prioritaskan pengalaman pengguna: ikon dan daftar favorit tetap berubah
+      // secara lokal. Aksi akan dicoba ulang saat fetch/sync berikutnya.
+      await _savePending(id, value);
+      return;
     }
   }
 
@@ -139,13 +130,5 @@ class FavoritesLocalDataSource {
     } else {
       await _prefs.setString(_pendingFavoritesKey, jsonEncode(pending));
     }
-  }
-
-  bool _isNetworkOrServerError(Object error) {
-    if (error is DioException) {
-      final status = error.response?.statusCode;
-      return status == null || status >= 500;
-    }
-    return true;
   }
 }

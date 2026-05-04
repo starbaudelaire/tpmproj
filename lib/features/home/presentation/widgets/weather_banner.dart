@@ -12,7 +12,8 @@ class WeatherBanner extends StatelessWidget {
 
 
   String _uvLabel(double value) {
-    if (value <= 0) return '0.0 malam';
+    if (value <= 0) return DateTime.now().hour >= 18 || DateTime.now().hour < 6 ? 'Malam' : '1.0 Rendah';
+    if (value < 3) return '${value.toStringAsFixed(1)} Rendah';
     return value.toStringAsFixed(1);
   }
 
@@ -152,12 +153,6 @@ class _WeatherIcon extends StatelessWidget {
 
   final String condition;
 
-
-  String _uvLabel(double value) {
-    if (value <= 0) return '0.0 malam';
-    return value.toStringAsFixed(1);
-  }
-
   @override
   Widget build(BuildContext context) {
     final lower = condition.toLowerCase();
@@ -199,12 +194,6 @@ class _WeatherMetric extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-
-
-  String _uvLabel(double value) {
-    if (value <= 0) return '0.0 malam';
-    return value.toStringAsFixed(1);
-  }
 
   @override
   Widget build(BuildContext context) {

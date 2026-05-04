@@ -234,7 +234,7 @@ class MiniGameScreen extends ConsumerWidget {
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 126),
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 126),
             children: [
               const JogjaPageHeader(title: 'Jogja Quiz', subtitle: 'Kuis budaya dan sejarah Jogja yang lebih seru.'),
               const SizedBox(height: 18),
@@ -401,7 +401,7 @@ class _QuizLobbyView extends StatelessWidget {
       borderColor: CupertinoColors.white.withOpacity(0.12),
       padding: EdgeInsets.zero,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: RadialGradient(
@@ -593,7 +593,7 @@ class _QuizResultView extends StatelessWidget {
       borderColor: CupertinoColors.white.withOpacity(0.12),
       padding: EdgeInsets.zero,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: RadialGradient(

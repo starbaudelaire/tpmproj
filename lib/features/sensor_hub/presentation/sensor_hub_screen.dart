@@ -115,7 +115,7 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
         child: SafeArea(
           child: ListView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 126),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
             children: [
               JogjaPageHeader(title: 'Sensor Jelajah', subtitle: 'Shake to Discover dan tilt card untuk eksplorasi.'),
               const SizedBox(height: 18),

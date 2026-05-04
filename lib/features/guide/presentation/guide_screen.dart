@@ -96,7 +96,7 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
               child: JogjaPageHeader(
                 title: 'Guide AI',
                 subtitle: 'Tanya rekomendasi wisata dengan gaya pemandu Jogja.',
@@ -119,7 +119,7 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
                       controller: _scrollController,
                       reverse: true,
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                       itemCount: history.length,
                       itemBuilder: (context, index) {
                         final message = history[history.length - index - 1];
@@ -137,7 +137,7 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
                     ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
               child: _GuideInputBar(
                 controller: _controller,
                 sending: _sending,
@@ -232,7 +232,7 @@ class _SuggestionRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         itemCount: suggestions.length,
         separatorBuilder: (_, __) => const SizedBox(width: 9),
         itemBuilder: (context, index) {
@@ -276,7 +276,7 @@ class _EmptyGuideState extends StatelessWidget {
           opacity: 0.072,
           borderRadius: 28,
           borderColor: CupertinoColors.white.withOpacity(0.11),
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

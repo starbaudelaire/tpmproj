@@ -34,8 +34,7 @@ class DestinationsRemoteDataSource {
           .map(DestinationModel.fromApiJson)
           .toList();
 
-      await syncLocalCache(items);
-      return items;
+      return syncLocalCache(items);
     } catch (error) {
       final cached = Hive.box<DestinationModel>(AppConstants.destinationsBox).values.toList();
       if (cached.isNotEmpty) return cached;
@@ -88,23 +87,24 @@ class DestinationsRemoteDataSource {
     );
   }
 
-  Future<void> syncLocalCache(List<DestinationModel> items) async {
+  Future<List<DestinationModel>> syncLocalCache(List<DestinationModel> items) async {
     final box = Hive.box<DestinationModel>(AppConstants.destinationsBox);
     final favoriteIds = box.values
         .where((item) => item.isFavorite)
         .map((item) => item.id)
         .toSet();
 
+    final merged = <DestinationModel>[];
     for (final destination in items) {
       final existing = box.get(destination.id);
-      await box.put(
-        destination.id,
-        destination.copyWith(
-          isFavorite: destination.isFavorite ||
-              favoriteIds.contains(destination.id) ||
-              (existing?.isFavorite ?? false),
-        ),
-      );
+      final isFavorite = destination.isFavorite ||
+          favoriteIds.contains(destination.id) ||
+          (existing?.isFavorite ?? false);
+      final mergedDestination = destination.copyWith(isFavorite: isFavorite);
+
+      await box.put(destination.id, mergedDestination);
+      merged.add(mergedDestination);
     }
+    return merged;
   }
 }

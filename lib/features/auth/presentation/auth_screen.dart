@@ -73,7 +73,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.spaceMD,
+                horizontal: AppSpacing.spaceLG,
                 vertical: 22,
               ),
               child: ConstrainedBox(
@@ -92,7 +92,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           key: ValueKey(_isLogin),
                           children: [
                             Text(
-                              _isLogin ? 'Sugeng rawuh kembali' : 'Mulai jelajahmu',
+                              _isLogin ? 'Sugeng rawuh' : 'Miwiti jelajahmu',
                               textAlign: TextAlign.center,
                               style: AppTypography.displayBold34.copyWith(
                                 color: _text,
@@ -103,8 +103,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             const SizedBox(height: 8),
                             Text(
                               _isLogin
-                                  ? 'Masuk lagi dan lanjutkan cerita jalan-jalanmu di Jogja.'
-                                  : 'Buat akun untuk menyimpan destinasi, kuis, dan rekomendasi personal.',
+                                  ? 'Masuk dan lanjutkan cerita jalan-jalanmu di Jogja bersama pemandu wisata digital.'
+                                  : 'Buat akun untuk menyimpan destinasi favorit, kuis budaya, dan rekomendasi personal.',
                               textAlign: TextAlign.center,
                               style: AppTypography.textRegular13.copyWith(
                                 color: _muted,
@@ -298,7 +298,7 @@ class _LiquidAuthPanel extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+            padding: const EdgeInsets.fromLTRB(26, 28, 26, 26),
             child: child,
           ),
         ],
@@ -419,7 +419,7 @@ class _AuthModeSwitch extends StatelessWidget {
             children: [
               Expanded(
                 child: _AuthModeItem(
-                  label: 'Log in',
+                  label: 'Masuk',
                   selected: isLogin,
                   onTap: () => onChanged(true),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
+import '../../../../core/utils/destination_display_util.dart';
 import '../../../../shared/models/destination.dart';
 import '../../../../shared/widgets/destination_card_compact.dart';
 
@@ -24,7 +25,7 @@ class SimilarDestinations extends StatelessWidget {
             width: 280,
             child: DestinationCardCompact(
               destination: destination,
-              subtitle: destination.category,
+              subtitle: DestinationDisplayUtil.categoryFor(destination),
               onTap: () => context.pushReplacement(
                 '${RouteNames.destination}/${destination.id}',
               ),

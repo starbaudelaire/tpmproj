@@ -55,7 +55,7 @@ class _ConverterScreenState extends ConsumerState<ConverterScreen> {
             padding: const EdgeInsets.only(top: 22),
             child: ListView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 126),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 126),
               children: [
                 const JogjaPageHeader(title: 'Konverter Wisata', subtitle: 'Cek mata uang dan waktu sebelum jalan-jalan.'),
                 const SizedBox(height: 18),

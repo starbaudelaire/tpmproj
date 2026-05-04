@@ -35,7 +35,7 @@ class TpmAboutScreen extends StatelessWidget {
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 126),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
             children: const [
               JogjaPageHeader(title: 'Saran & Kesan TPM', subtitle: 'Cerita kelompok selama membangun JogjaSplorasi.'),
               SizedBox(height: 18),

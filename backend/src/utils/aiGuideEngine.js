@@ -1,4 +1,5 @@
 const { googleMapsUrl } = require('./llmProvider');
+
 function tokenize(text) {
   return String(text || '')
     .toLowerCase()
@@ -23,16 +24,34 @@ function destinationText(destination) {
   ].filter(Boolean).join(' ');
 }
 
+function inferQueryContext(tokens) {
+  const joined = tokens.join(' ');
+  return {
+    wantsNight: /malam|sore|sunset|senja/.test(joined),
+    wantsCulinary: /kuliner|makan|murah|bakmi|gudeg|sate|kopi|warung/.test(joined),
+    wantsCulture: /budaya|sejarah|candi|museum|seni|ramayana|pertunjukan/.test(joined),
+    wantsNature: /alam|pantai|bukit|hutan|view|foto|sunrise/.test(joined),
+  };
+}
+
 function scoreDestination(destination, queryTokens, context = {}) {
   const haystack = destinationText(destination).toLowerCase();
+  const category = String(destination.category || '').toLowerCase();
+  const name = String(destination.name || '').toLowerCase();
+  const tags = (destination.tags || []).map((tag) => String(tag).toLowerCase());
+
   let score = 0;
   for (const token of queryTokens) {
     if (haystack.includes(token)) score += 8;
-    if ((destination.name || '').toLowerCase().includes(token)) score += 10;
-    if ((destination.tags || []).some((tag) => tag.toLowerCase().includes(token))) score += 8;
+    if (name.includes(token)) score += 12;
+    if (tags.some((tag) => tag.includes(token))) score += 8;
+    if (category.includes(token)) score += 10;
   }
-  if (context.type && destination.type === context.type) score += 20;
-  if (context.preferredCategories?.includes(destination.type?.toLowerCase())) score += 6;
+
+  if (context.wantsNight && /malam|sore|senja|ramayana|kuliner|warung|kopi|alun|malioboro/.test(haystack)) score += 22;
+  if (context.wantsCulinary && /kuliner|makan|bakmi|gudeg|sate|kopi|warung|resto|angkringan|masakan/.test(haystack)) score += 22;
+  if (context.wantsCulture && /budaya|sejarah|candi|museum|seni|ramayana|keraton/.test(haystack)) score += 18;
+  if (context.wantsNature && /alam|pantai|bukit|hutan|view|foto|sunrise|sunset/.test(haystack)) score += 18;
   if (destination.isFeatured) score += 7;
   score += Number(destination.rating || 0) * 2;
   score += Number(destination.culturalValue || 0) * 0.8;
@@ -41,10 +60,12 @@ function scoreDestination(destination, queryTokens, context = {}) {
 
 function pickRelevantDestinations(destinations, userMessage, options = {}) {
   const queryTokens = tokenize(userMessage);
+  const inferred = inferQueryContext(queryTokens);
+
   return destinations
     .map((destination) => ({
       destination,
-      score: scoreDestination(destination, queryTokens, options),
+      score: scoreDestination(destination, queryTokens, { ...options, ...inferred }),
     }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -52,14 +73,36 @@ function pickRelevantDestinations(destinations, userMessage, options = {}) {
     .map((item) => item.destination);
 }
 
-function formatDestination(destination) {
-  const tags = (destination.tags || []).slice(0, 4).join(', ');
+function cleanCategory(destination) {
+  const text = [destination.category, ...(destination.tags || []), destination.name].filter(Boolean).join(' ').toLowerCase();
+  if (/bakmi|sate|gudeg|warung|kuliner|makan|kopi|angkringan|resto|masakan/.test(text)) return 'Kuliner';
+  if (/candi|sejarah|heritage/.test(text)) return 'Sejarah';
+  if (/museum|seni|galeri|ramayana|budaya|keraton/.test(text)) return 'Budaya';
+  if (/pantai|bukit|alam|hutan|viewpoint|foto/.test(text)) return 'Alam';
+  return destination.category ? `${destination.category.charAt(0).toUpperCase()}${destination.category.slice(1)}` : 'Wisata';
+}
+
+function formatDestination(destination, index) {
+  const category = cleanCategory(destination);
   const maps = googleMapsUrl(destination);
-  return `${destination.name} (${destination.category}) - ${destination.description}${destination.localInsight ? ` Insight lokal: ${destination.localInsight}` : ''}${destination.ticketPrice ? ` Tiket: ${destination.ticketPrice}.` : ''}${destination.openingHours ? ` Jam buka: ${destination.openingHours}.` : ''}${tags ? ` Tag: ${tags}.` : ''} Maps: ${maps}`;
+  const description = destination.localInsight || destination.description || destination.story || 'Destinasi ini tersedia di database JogjaSplorasi.';
+  const details = [];
+  if (destination.openingHours) details.push(`Jam: ${destination.openingHours}`);
+  if (destination.ticketPrice) details.push(`Tiket: ${destination.ticketPrice}`);
+  if (destination.bestTimeToVisit) details.push(`Waktu cocok: ${destination.bestTimeToVisit}`);
+
+  return [
+    `${index}. ${destination.name} (${category})`,
+    `   ${description}`,
+    details.length ? `   ${details.join(' • ')}` : '   Detail jam/harga sebaiknya dicek kembali di sumber resmi.',
+    `   Maps: ${maps}`,
+  ].join('\n');
 }
 
 function buildLocalGuideReply({ message, destinations, userName }) {
-  const relevant = pickRelevantDestinations(destinations, message, { limit: 5 });
+  const relevant = pickRelevantDestinations(destinations, message, { limit: 4 });
+  const greeting = `Sugeng rawuh${userName ? `, ${userName}` : ''}. Nggih, saya bantu pilihkan dari database JogjaSplorasi.`;
+
   if (!relevant.length) {
     const featured = destinations
       .slice()
@@ -67,10 +110,13 @@ function buildLocalGuideReply({ message, destinations, userName }) {
       .slice(0, 3);
     return {
       answer: [
-        `Saya belum menemukan destinasi yang sangat cocok dari pertanyaan itu${userName ? `, ${userName}` : ''}.`,
-        'Sebagai alternatif, ini pilihan populer yang aman untuk kamu pertimbangkan:',
-        ...featured.map((item, index) => `${index + 1}. ${formatDestination(item)}`),
-        'Anda bisa memperjelas minat seperti budaya, kuliner, alam, dekat Malioboro, murah, atau cocok sore hari.',
+        greeting,
+        '',
+        'Saya belum menemukan destinasi yang sangat pas dari pertanyaan panjenengan. Monggo, sebagai alternatif ini pilihan populer yang bisa dipertimbangkan:',
+        '',
+        ...featured.map((item, index) => formatDestination(item, index + 1)),
+        '',
+        'Matur nuwun. Panjenengan bisa memperjelas minat seperti kuliner, budaya, alam, dekat Malioboro, murah, atau cocok malam hari.',
       ].join('\n'),
       citedDestinationIds: featured.map((item) => item.id),
       confidence: 'low',
@@ -79,9 +125,13 @@ function buildLocalGuideReply({ message, destinations, userName }) {
 
   return {
     answer: [
-      `Siap${userName ? `, ${userName}` : ''}! Ini rekomendasi Jogja yang cocok dari database JogjaSplorasi:`,
-      ...relevant.map((item, index) => `${index + 1}. ${formatDestination(item)}`),
-      'Tips pemandu: cek kembali jam operasional sebelum berangkat, lalu buka link Maps untuk rute paling nyaman.',
+      greeting,
+      '',
+      'Rekomendasi yang cocok untuk panjenengan:',
+      '',
+      ...relevant.map((item, index) => formatDestination(item, index + 1)),
+      '',
+      'Tips pemandu: sebelum berangkat, monggo cek kembali jam operasional dan rute Maps agar perjalanan lebih nyaman. Matur nuwun.',
     ].join('\n'),
     citedDestinationIds: relevant.map((item) => item.id),
     confidence: 'medium',
@@ -106,7 +156,7 @@ function buildItinerary({ destinations, days = 1, pace = 'normal' }) {
       destinationId: destination.id,
       name: destination.name,
       type: destination.type,
-      category: destination.category,
+      category: cleanCategory(destination),
       address: destination.address,
       reason: destination.localInsight || destination.description,
     }));

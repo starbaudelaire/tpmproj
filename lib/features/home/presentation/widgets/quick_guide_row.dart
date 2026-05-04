@@ -16,30 +16,6 @@ class QuickGuideRow extends StatelessWidget {
           children: [
             Expanded(
               child: MetricCard(
-                icon: CupertinoIcons.money_dollar_circle,
-                label: 'Konversi',
-                value: 'Kurs',
-                color: AppColors.accentPrimary,
-                onTap: () => context.push(RouteNames.converter),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: MetricCard(
-                icon: CupertinoIcons.time,
-                label: 'Konversi',
-                value: 'Waktu',
-                color: AppColors.accentTertiary,
-                onTap: () => context.push(RouteNames.converter),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: MetricCard(
                 icon: CupertinoIcons.sparkles,
                 label: 'Guide AI',
                 value: 'Tanya',
@@ -55,6 +31,30 @@ class QuickGuideRow extends StatelessWidget {
                 value: 'Budaya',
                 color: AppColors.accentTertiary,
                 onTap: () => context.push(RouteNames.game),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: MetricCard(
+                icon: CupertinoIcons.money_dollar_circle,
+                label: 'Konversi',
+                value: 'Kurs',
+                color: AppColors.accentPrimary,
+                onTap: () => context.push(RouteNames.converter),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: MetricCard(
+                icon: CupertinoIcons.time,
+                label: 'Konversi',
+                value: 'Waktu',
+                color: AppColors.accentTertiary,
+                onTap: () => context.push(RouteNames.converter),
               ),
             ),
           ],
