@@ -12,6 +12,7 @@ final searchQueryProvider = StateProvider<String>((ref) => '');
 final activeCategoryProvider = StateProvider<String?>((ref) => null);
 final gridModeProvider = StateProvider<bool>((ref) => true);
 final sortByNearestProvider = StateProvider<bool>((ref) => true);
+final explorePageProvider = StateProvider<int>((ref) => 1);
 
 final _repositoryProvider = Provider<ExploreRepositoryImpl>(
   (ref) => ExploreRepositoryImpl(getIt<DestinationsRemoteDataSource>()),

@@ -10,6 +10,12 @@ class WeatherBanner extends StatelessWidget {
 
   final WeatherModel weather;
 
+
+  String _uvLabel(double value) {
+    if (value <= 0) return '0.0 malam';
+    return value.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final temp = weather.temp.toStringAsFixed(0);
@@ -71,7 +77,7 @@ class WeatherBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Yogyakarta',
+                            weather.locationLabel,
                             style: AppTypography.labelMedium12.copyWith(
                               color: AppColors.textSecondary,
                               letterSpacing: 0.6,
@@ -127,7 +133,7 @@ class WeatherBanner extends StatelessWidget {
                       child: _WeatherMetric(
                         icon: CupertinoIcons.sun_max_fill,
                         label: 'UV',
-                        value: weather.uvIndex.toStringAsFixed(1),
+                        value: _uvLabel(weather.uvIndex),
                       ),
                     ),
                   ],
@@ -145,6 +151,12 @@ class _WeatherIcon extends StatelessWidget {
   const _WeatherIcon({required this.condition});
 
   final String condition;
+
+
+  String _uvLabel(double value) {
+    if (value <= 0) return '0.0 malam';
+    return value.toStringAsFixed(1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +199,12 @@ class _WeatherMetric extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+
+
+  String _uvLabel(double value) {
+    if (value <= 0) return '0.0 malam';
+    return value.toStringAsFixed(1);
+  }
 
   @override
   Widget build(BuildContext context) {

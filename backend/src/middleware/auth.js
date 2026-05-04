@@ -25,6 +25,20 @@ async function auth(req, res, next) {
   }
 }
 
+async function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    if (user && user.isActive) req.user = user;
+  } catch {
+    // Public endpoints tetap berjalan tanpa status login.
+  }
+  next();
+}
+
 function requireAdmin(req, res, next) {
   if (req.user?.role !== 'ADMIN') {
     return res.status(403).json({
@@ -37,4 +51,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { auth, requireAdmin };
+module.exports = { auth, optionalAuth, requireAdmin };

@@ -80,7 +80,12 @@ class DestinationsRemoteDataSource {
   Future<void> upsertLocal(DestinationModel item) async {
     final box = Hive.box<DestinationModel>(AppConstants.destinationsBox);
     final existing = box.get(item.id);
-    await box.put(item.id, item.copyWith(isFavorite: existing?.isFavorite ?? item.isFavorite));
+    await box.put(
+      item.id,
+      item.copyWith(
+        isFavorite: item.isFavorite || (existing?.isFavorite ?? false),
+      ),
+    );
   }
 
   Future<void> syncLocalCache(List<DestinationModel> items) async {
@@ -94,7 +99,11 @@ class DestinationsRemoteDataSource {
       final existing = box.get(destination.id);
       await box.put(
         destination.id,
-        destination.copyWith(isFavorite: favoriteIds.contains(destination.id) || (existing?.isFavorite ?? false)),
+        destination.copyWith(
+          isFavorite: destination.isFavorite ||
+              favoriteIds.contains(destination.id) ||
+              (existing?.isFavorite ?? false),
+        ),
       );
     }
   }

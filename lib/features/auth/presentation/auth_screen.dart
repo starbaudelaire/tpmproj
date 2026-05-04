@@ -210,7 +210,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       if (!kIsWeb) ...[
                         const SizedBox(height: 12),
                         _LiquidActionButton(
-                          label: 'Masuk dengan Biometrik',
+                          label: 'Buka dengan Biometrik',
                           icon:
                               CupertinoIcons.person_crop_circle_badge_checkmark,
                           onPressed: () async {
@@ -228,7 +228,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ],
                       const SizedBox(height: 18),
                       Text(
-                        'Data login disimpan aman. Biometrik memakai validasi bawaan HP, bukan menyimpan sidik jari.',
+                        'Session disimpan aman. Biometrik hanya membuka aplikasi di perangkat ini, bukan menyimpan sidik jari.',
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMedium12.copyWith(
                           color: _muted.withOpacity(0.72),

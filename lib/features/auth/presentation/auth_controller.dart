@@ -64,7 +64,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> biometricLogin() async {
     if (!await _localDataSource.isBiometricEnabled()) {
       state = state.copyWith(
-        error: 'Login biometrik belum diaktifkan dari Profil.',
+        error: 'Kunci aplikasi biometrik belum diaktifkan dari Profil.',
       );
       return false;
     }

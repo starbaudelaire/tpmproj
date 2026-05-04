@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,21 +7,70 @@ import '../../../core/services/location_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
+import '../../../shared/models/destination.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import 'explore_controller.dart';
 import 'widgets/destination_grid.dart';
 import 'widgets/destination_list.dart';
-import 'widgets/filter_sheet.dart';
 import 'widgets/map_preview_strip.dart';
 
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
+
+  static const int _pageSize = 20;
+
+  void _resetPage(WidgetRef ref) {
+    ref.read(explorePageProvider.notifier).state = 1;
+  }
+
+  void _showCategoryPicker(BuildContext context, WidgetRef ref, String? activeCategory) {
+    const categories = <String?>[
+      null,
+      'Budaya',
+      'Alam',
+      'Kuliner',
+      'Belanja',
+      'Seni',
+      'Aktivitas',
+      'Sejarah',
+      'Foto',
+    ];
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Pilih kategori'),
+        message: const Text('Filter destinasi tanpa memenuhi halaman dengan chip.'),
+        actions: [
+          for (final category in categories)
+            CupertinoActionSheetAction(
+              onPressed: () {
+                ref.read(activeCategoryProvider.notifier).state = category;
+                _resetPage(ref);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                category ?? 'Semua destinasi',
+                style: TextStyle(
+                  fontWeight: activeCategory == category ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isGrid = ref.watch(gridModeProvider);
     final sortByNearest = ref.watch(sortByNearestProvider);
     final activeCategory = ref.watch(activeCategoryProvider);
+    final currentPage = ref.watch(explorePageProvider);
     final location = ref.watch(exploreLocationProvider);
     final results = ref.watch(exploreResultsProvider);
 
@@ -45,67 +95,43 @@ class ExploreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           _SearchField(
-            onChanged: (value) =>
-                ref.read(searchQueryProvider.notifier).state = value,
-          ),
-          const SizedBox(height: 13),
-          Row(
-            children: [
-              _CircleToolButton(
-                label: 'Terdekat',
-                icon: sortByNearest
-                    ? CupertinoIcons.location_solid
-                    : CupertinoIcons.location,
-                active: sortByNearest && locationReady,
-                onTap: () {
-                  ref.read(sortByNearestProvider.notifier).state =
-                      !sortByNearest;
-                },
-              ),
-              const SizedBox(width: 10),
-              _CircleToolButton(
-                label: isGrid ? 'List' : 'Grid',
-                icon: isGrid
-                    ? CupertinoIcons.list_bullet
-                    : CupertinoIcons.square_grid_2x2,
-                onTap: () {
-                  ref.read(gridModeProvider.notifier).state = !isGrid;
-                },
-              ),
-              const SizedBox(width: 10),
-              _CircleToolButton(
-                label: 'Filter',
-                icon: CupertinoIcons.slider_horizontal_3,
-                active: activeCategory != null,
-                onTap: () => showCupertinoModalPopup<void>(
-                  context: context,
-                  builder: (_) => FilterSheet(
-                    onSelected: (value) =>
-                        ref.read(activeCategoryProvider.notifier).state = value,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              _MiniStatusPill(
-                text: activeCategory ?? (sortByNearest ? 'Terdekat' : 'Semua'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          _CategoryChips(
-            activeCategory: activeCategory,
-            onSelected: (value) {
-              ref.read(activeCategoryProvider.notifier).state = value;
+            onChanged: (value) {
+              ref.read(searchQueryProvider.notifier).state = value;
+              _resetPage(ref);
             },
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 12),
+          _ExploreControlPanel(
+            categoryLabel: activeCategory ?? 'Semua',
+            sortLabel: sortByNearest ? 'Terdekat' : 'Kurasi',
+            layoutLabel: isGrid ? 'Kartu' : 'List',
+            isNearestActive: sortByNearest && locationReady,
+            onCategoryTap: () => _showCategoryPicker(context, ref, activeCategory),
+            onSortTap: () {
+              ref.read(sortByNearestProvider.notifier).state = !sortByNearest;
+              _resetPage(ref);
+            },
+            onLayoutTap: () => ref.read(gridModeProvider.notifier).state = !isGrid,
+            onResetTap: () {
+              ref.read(searchQueryProvider.notifier).state = '';
+              ref.read(activeCategoryProvider.notifier).state = null;
+              ref.read(sortByNearestProvider.notifier).state = true;
+              _resetPage(ref);
+            },
+          ),
+          const SizedBox(height: 20),
           results.when(
             data: (items) {
+              final totalPages = math.max(1, (items.length / _pageSize).ceil());
+              final safePage = currentPage.clamp(1, totalPages).toInt();
+              final start = items.isEmpty ? 0 : (safePage - 1) * _pageSize;
+              final end = math.min(start + _pageSize, items.length);
+              final pageItems = items.isEmpty ? <DestinationModel>[] : items.sublist(start, end);
               final position = location.valueOrNull;
               final distanceLabels = <String, String>{};
 
               if (position != null) {
-                for (final item in items) {
+                for (final item in pageItems) {
                   final meters = getIt<LocationService>().distanceInMeters(
                     fromLat: position.latitude,
                     fromLon: position.longitude,
@@ -122,31 +148,42 @@ class ExploreScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   MapPreviewStrip(
-                    destinations: items,
+                    destinations: pageItems,
                     userLatitude: position?.latitude,
                     userLongitude: position?.longitude,
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
                   _SectionHeader(
                     title: sortByNearest && position != null
                         ? 'Terdekat dari Lokasimu'
-                        : 'Semua Destinasi',
-                    subtitle: '${items.length} destinasi ditemukan',
+                        : activeCategory ?? 'Semua Destinasi',
+                    subtitle: items.isEmpty
+                        ? 'Tidak ada hasil'
+                        : '${start + 1}-$end dari ${items.length}',
                   ),
                   const SizedBox(height: 12),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
                     child: isGrid
                         ? DestinationGrid(
-                            key: const ValueKey('grid'),
-                            items: items,
+                            key: ValueKey('grid-$safePage-${activeCategory ?? 'all'}'),
+                            items: pageItems,
                             distanceLabels: distanceLabels,
                           )
                         : DestinationList(
-                            key: const ValueKey('list'),
-                            items: items,
+                            key: ValueKey('list-$safePage-${activeCategory ?? 'all'}'),
+                            items: pageItems,
                             distanceLabels: distanceLabels,
                           ),
+                  ),
+                  const SizedBox(height: 16),
+                  _PaginationControls(
+                    page: safePage,
+                    totalPages: totalPages,
+                    canPrevious: safePage > 1,
+                    canNext: safePage < totalPages,
+                    onPrevious: () => ref.read(explorePageProvider.notifier).state = safePage - 1,
+                    onNext: () => ref.read(explorePageProvider.notifier).state = safePage + 1,
                   ),
                 ],
               );
@@ -156,6 +193,193 @@ class ExploreScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ExploreControlPanel extends StatelessWidget {
+  const _ExploreControlPanel({
+    required this.categoryLabel,
+    required this.sortLabel,
+    required this.layoutLabel,
+    required this.isNearestActive,
+    required this.onCategoryTap,
+    required this.onSortTap,
+    required this.onLayoutTap,
+    required this.onResetTap,
+  });
+
+  final String categoryLabel;
+  final String sortLabel;
+  final String layoutLabel;
+  final bool isNearestActive;
+  final VoidCallback onCategoryTap;
+  final VoidCallback onSortTap;
+  final VoidCallback onLayoutTap;
+  final VoidCallback onResetTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      blur: 30,
+      opacity: 0.07,
+      borderRadius: 22,
+      borderColor: CupertinoColors.white.withOpacity(0.10),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          _SelectPill(
+            icon: CupertinoIcons.square_grid_2x2,
+            label: 'Kategori',
+            value: categoryLabel,
+            onTap: onCategoryTap,
+          ),
+          _SelectPill(
+            icon: isNearestActive ? CupertinoIcons.location_solid : CupertinoIcons.sort_down,
+            label: 'Urut',
+            value: sortLabel,
+            active: isNearestActive,
+            onTap: onSortTap,
+          ),
+          _SelectPill(
+            icon: CupertinoIcons.rectangle_grid_1x2,
+            label: 'Tampilan',
+            value: layoutLabel,
+            onTap: onLayoutTap,
+          ),
+          _SelectPill(
+            icon: CupertinoIcons.arrow_counterclockwise,
+            label: 'Reset',
+            value: 'Bersihkan',
+            onTap: onResetTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectPill extends StatelessWidget {
+  const _SelectPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.active = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      pressedOpacity: 0.75,
+      onPressed: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: CupertinoColors.white.withOpacity(active ? 0.10 : 0.055),
+          border: Border.all(color: CupertinoColors.white.withOpacity(0.085)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: active ? AppColors.accentPrimary : AppColors.textSecondary),
+            const SizedBox(width: 7),
+            Text(
+              '$label: $value',
+              style: AppTypography.captionSmall11.copyWith(
+                color: active ? AppColors.textPrimary : AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaginationControls extends StatelessWidget {
+  const _PaginationControls({
+    required this.page,
+    required this.totalPages,
+    required this.canPrevious,
+    required this.canNext,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int totalPages;
+  final bool canPrevious;
+  final bool canNext;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: canPrevious ? onPrevious : null,
+            child: GlassCard(
+              blur: 24,
+              opacity: canPrevious ? 0.075 : 0.035,
+              borderRadius: 18,
+              borderColor: CupertinoColors.white.withOpacity(0.08),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              child: Text(
+                '← Sebelumnya',
+                textAlign: TextAlign.center,
+                style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GlassCard(
+          blur: 20,
+          opacity: 0.055,
+          borderRadius: 18,
+          borderColor: CupertinoColors.white.withOpacity(0.08),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Text(
+            '$page / $totalPages',
+            style: AppTypography.captionSmall11.copyWith(color: AppColors.textSecondary),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: canNext ? onNext : null,
+            child: GlassCard(
+              blur: 24,
+              opacity: canNext ? 0.075 : 0.035,
+              borderRadius: 18,
+              borderColor: CupertinoColors.white.withOpacity(0.08),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              child: Text(
+                'Berikutnya →',
+                textAlign: TextAlign.center,
+                style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -12,11 +13,13 @@ class DestinationCardCompact extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     super.key,
+    this.onFavoriteToggle,
   });
 
   final DestinationModel destination;
   final String subtitle;
   final VoidCallback onTap;
+  final VoidCallback? onFavoriteToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +81,13 @@ class DestinationCardCompact extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
+            if (onFavoriteToggle != null) ...[
+              _CompactFavoriteButton(
+                active: destination.isFavorite,
+                onTap: onFavoriteToggle!,
+              ),
+              const SizedBox(width: 8),
+            ],
             const Icon(
               CupertinoIcons.chevron_right,
               size: 16,
@@ -129,3 +139,61 @@ class _CompactImageFallback extends StatelessWidget {
   }
 }
 
+
+class _CompactFavoriteButton extends StatefulWidget {
+  const _CompactFavoriteButton({
+    required this.active,
+    required this.onTap,
+  });
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  State<_CompactFavoriteButton> createState() => _CompactFavoriteButtonState();
+}
+
+class _CompactFavoriteButtonState extends State<_CompactFavoriteButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapCancel: () => _setPressed(false),
+      onTapUp: (_) {
+        _setPressed(false);
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.88 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: CupertinoColors.white.withOpacity(0.075),
+            border: Border.all(
+              color: CupertinoColors.white.withOpacity(0.11),
+            ),
+          ),
+          child: Icon(
+            widget.active ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+            size: 18,
+            color: widget.active ? AppColors.accentPrimary : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}

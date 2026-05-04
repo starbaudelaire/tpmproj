@@ -1,11 +1,16 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/models/destination.dart';
 import '../../../../shared/widgets/destination_card_compact.dart';
+import '../../../favorites/data/favorites_local_datasource.dart';
+import '../../../home/presentation/home_controller.dart';
+import '../explore_controller.dart';
 
-class DestinationList extends StatelessWidget {
+class DestinationList extends ConsumerWidget {
   const DestinationList({
     required this.items,
     required this.distanceLabels,
@@ -15,8 +20,19 @@ class DestinationList extends StatelessWidget {
   final List<DestinationModel> items;
   final Map<String, String> distanceLabels;
 
+  Future<void> _toggleFavorite(
+    WidgetRef ref,
+    DestinationModel destination,
+  ) async {
+    await getIt<FavoritesLocalDataSource>().toggleFavorite(destination);
+
+    ref.invalidate(exploreResultsProvider);
+    ref.invalidate(featuredDestinationsProvider);
+    ref.invalidate(nearbyDestinationsProvider);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: items
           .map(
@@ -28,6 +44,7 @@ class DestinationList extends StatelessWidget {
                     ? '${_categoryLabel(destination)} • rating ${destination.rating.toStringAsFixed(1)}'
                     : '${distanceLabels[destination.id]} • ${_categoryLabel(destination)}',
                 onTap: () => context.push('${RouteNames.destination}/${destination.id}'),
+                onFavoriteToggle: () => _toggleFavorite(ref, destination),
               ),
             ),
           )

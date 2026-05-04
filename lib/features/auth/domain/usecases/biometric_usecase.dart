@@ -14,7 +14,7 @@ class BiometricUseCase {
           await _localAuth.isDeviceSupported();
       if (!available) return false;
       return _localAuth.authenticate(
-        localizedReason: 'Masuk cepat ke JogjaSplorasi dengan biometrik perangkat',
+        localizedReason: 'Buka JogjaSplorasi dengan biometrik perangkat',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

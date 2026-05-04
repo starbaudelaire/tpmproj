@@ -17,7 +17,6 @@ import '../../../shared/widgets/bottom_sheet_wrapper.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import 'home_controller.dart';
-import 'widgets/category_grid.dart';
 import 'widgets/featured_destinations_row.dart';
 import 'widgets/nearby_destinations_row.dart';
 import 'widgets/quick_guide_row.dart';
@@ -156,20 +155,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     const _HomeSearchBar(),
                     const SizedBox(height: 18),
+                    const _SectionHeader(
+                      title: 'Menu Utama',
+                      subtitle: 'Akses cepat fitur unggulan JogjaSplorasi.',
+                    ),
+                    const SizedBox(height: 12),
+                    const QuickGuideRow(),
+                    const SizedBox(height: 22),
                     weather.when(
                       data: (value) => WeatherBanner(weather: value),
                       loading: () => const LoadingSkeleton(height: 124),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
-                    const SizedBox(height: 26),
-                    const _SectionHeader(
-                      title: 'Kategori Wisata',
-                      subtitle:
-                          'Pilih suasana jalan-jalan yang kamu mau.',
-                    ),
-                    const SizedBox(height: 12),
-                    const CategoryGrid(),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 28),
                     const _SectionHeader(
                       title: 'Destinasi Unggulan',
                       subtitle: 'Pilihan tempat terbaik dari kurasi JogjaSplorasi.',
@@ -197,14 +195,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       loading: () => const LoadingSkeleton(height: 180),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
-                    const SizedBox(height: 30),
-                    const _SectionHeader(
-                      title: 'Menu Utama',
-                      subtitle:
-                          'Empat fitur praktis untuk menemani perjalananmu di Jogja.',
-                    ),
-                    const SizedBox(height: 12),
-                    const QuickGuideRow(),
                   ],
                 ),
               ),

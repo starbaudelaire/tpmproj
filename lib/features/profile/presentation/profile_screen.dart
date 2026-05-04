@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'dart:convert';
@@ -15,7 +14,6 @@ import '../../../core/di/injection.dart';
 import '../../../core/router/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/theme_controller.dart';
 import '../../../shared/models/destination.dart';
 import '../../../shared/models/user.dart';
 import '../../../shared/widgets/glass_card.dart';
@@ -113,11 +111,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: Text(!enabled ? 'Biometrik aktif' : 'Biometrik nonaktif'),
+        title: Text(!enabled ? 'Kunci biometrik aktif' : 'Kunci biometrik nonaktif'),
         message: Text(
           !enabled
-              ? 'Login biometrik sudah diizinkan untuk akun terakhir.'
-              : 'Login biometrik dimatikan untuk perangkat ini.',
+              ? 'Aplikasi bisa dibuka dengan biometrik selama session masih valid.'
+              : 'Kunci aplikasi biometrik dimatikan untuk perangkat ini.',
         ),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.of(context).pop(),
@@ -226,15 +224,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         imageBytes: _profileImage,
                         onChangePhoto: _pickImage,
                       ),
-                      const SizedBox(height: 14),
-                      _ProfileStatsRow(
-                        bestQuizScore: data.bestQuizScore,
-                        favoriteCount: data.favoriteCount,
-                        destinationCount: data.destinationCount,
-                      ),
                       const SizedBox(height: 18),
                       _ProfileSection(
-                        title: 'Identitas',
+                        title: 'Akun Saya',
                         children: [
                           _ProfileMenuRow(
                             title: 'Edit Profil',
@@ -250,74 +242,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               });
                             },
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      _ProfileSection(
-                        title: 'Ruang Jelajah',
-                        children: [
                           _ProfileMenuRow(
-                            title: 'Favorit',
-                            subtitle:
-                                '${data.favoriteCount} destinasi tersimpan',
+                            title: 'Favorit Saya',
+                            subtitle: '${data.favoriteCount} destinasi tersimpan',
                             icon: CupertinoIcons.heart_fill,
-                            iconColor: AppColors.accentPrimary,
+                            iconColor: AppColors.accentSecondary,
                             onTap: () => context.push(RouteNames.favorites),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Jelajahi Jogja',
-                            subtitle: 'Cari dan filter destinasi wisata',
-                            icon: CupertinoIcons.map_fill,
-                            iconColor: AppColors.accentTertiary,
-                            onTap: () => context.go(RouteNames.explore),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Cari Semua',
-                            subtitle: 'Cari destinasi, fitur, tema, dan setting',
-                            icon: CupertinoIcons.search,
-                            iconColor: AppColors.accentPrimary,
-                            onTap: () => context.push(RouteNames.globalSearch),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Guide AI',
-                            subtitle: 'Rekomendasi wisata berbasis LLM',
-                            icon: CupertinoIcons.sparkles,
-                            iconColor: AppColors.accentSecondary,
-                            onTap: () => context.go(RouteNames.guide),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 22),
-                      _ProfileSection(
-                        title: 'Tools TPM',
-                        children: [
-                          _ProfileMenuRow(
-                            title: 'Sensor Hub',
-                            subtitle: 'Accelerometer dan gyroscope',
-                            icon: CupertinoIcons.waveform_path_ecg,
-                            iconColor: AppColors.accentPrimary,
-                            onTap: () => context.push(RouteNames.sensor),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Converter',
-                            subtitle: 'Konversi mata uang dan waktu',
-                            icon: CupertinoIcons.arrow_2_circlepath,
-                            iconColor: AppColors.accentTertiary,
-                            onTap: () => context.push(RouteNames.converter),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Mini Game',
-                            subtitle: 'Kuis budaya Jogja',
-                            icon: CupertinoIcons.gamecontroller_fill,
-                            iconColor: AppColors.accentSecondary,
-                            onTap: () => context.push(RouteNames.game),
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Saran & Kesan TPM',
-                            subtitle: 'Kesan dan saran mata kuliah TPM',
-                            icon: CupertinoIcons.doc_text_fill,
-                            iconColor: AppColors.accentTertiary,
-                            onTap: () => context.push(RouteNames.feedback),
                           ),
                         ],
                       ),
@@ -325,38 +255,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _ProfileSection(
                         title: 'Keamanan',
                         children: [
-                          const _ProfileMenuRow(
-                            title: 'Session Lokal Aman',
-                            subtitle: 'SecureStorage + Hive terenkripsi',
-                            icon: CupertinoIcons.lock_shield_fill,
-                            iconColor: AppColors.accentTertiary,
-                            trailing: _StatusPill(label: 'Aktif'),
-                          ),
-
                           _ProfileMenuRow(
-                            title: 'Tema Light/Dark',
-                            subtitle: 'Tap untuk mengganti tema aplikasi',
-                            icon: CupertinoIcons.paintbrush_fill,
-                            iconColor: AppColors.accentPrimary,
-                            trailing: const _StatusPill(label: 'Toggle'),
-                            onTap: () async {
-                              final container = ProviderScope.containerOf(context);
-                              await container.read(themeControllerProvider.notifier).toggleLightDark();
-                            },
-                          ),
-                          _ProfileMenuRow(
-                            title: 'Login Biometrik',
+                            title: 'Kunci Aplikasi Biometrik',
                             subtitle: data.biometricEnabled
-                                ? 'Aktif untuk akun terakhir'
-                                : 'Tap untuk mengaktifkan opt-in',
-                            icon: CupertinoIcons
-                                .person_crop_circle_badge_checkmark,
-                            iconColor: AppColors.accentTertiary,
-                            trailing: _StatusPill(
-                              label: data.biometricEnabled ? 'Enabled' : 'Off',
+                                ? 'Aktif untuk membuka session lokal'
+                                : 'Aktifkan fingerprint/face unlock perangkat',
+                            icon: data.biometricEnabled
+                                ? CupertinoIcons.lock_shield_fill
+                                : CupertinoIcons.lock_shield,
+                            iconColor: data.biometricEnabled
+                                ? AppColors.accentSecondary
+                                : AppColors.textSecondary,
+                            trailing: CupertinoSwitch(
+                              value: data.biometricEnabled,
+                              activeColor: AppColors.accentPrimary,
+                              onChanged: (_) => _toggleBiometric(data.biometricEnabled),
                             ),
-                            onTap: () =>
-                                _toggleBiometric(data.biometricEnabled),
+                            onTap: () => _toggleBiometric(data.biometricEnabled),
                           ),
                         ],
                       ),

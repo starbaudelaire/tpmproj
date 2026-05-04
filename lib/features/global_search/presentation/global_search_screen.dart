@@ -29,7 +29,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
         _SearchAction('Mini Game Budaya', 'Main kuis sejarah dan budaya Yogyakarta.', CupertinoIcons.gamecontroller_fill, RouteNames.game, ['quiz', 'kuis', 'game', 'budaya', 'sejarah']),
         _SearchAction('Konversi Wisatawan', 'Cek kurs IDR, USD, EUR dan zona waktu.', CupertinoIcons.arrow_2_circlepath, RouteNames.converter, ['kurs', 'mata uang', 'waktu', 'london', 'wib']),
         _SearchAction('Sensor Jelajah', 'Shake to Discover dan tilt card destinasi.', CupertinoIcons.waveform_path_ecg, RouteNames.sensor, ['sensor', 'shake', 'gyroscope', 'accelerometer']),
-        _SearchAction('Profil & Tema', 'Ganti foto, biometric, dark mode, dan session.', CupertinoIcons.person_crop_circle, RouteNames.profile, ['profil', 'tema', 'dark', 'light', 'biometrik']),
+        _SearchAction('Profil & Tema', 'Edit profil, favorit, kunci biometrik, dan session.', CupertinoIcons.person_crop_circle, RouteNames.profile, ['profil', 'tema', 'dark', 'light', 'biometrik']),
         _SearchAction('Saran & Kesan TPM', 'Kirim saran dan kesan mata kuliah TPM.', CupertinoIcons.doc_text_fill, RouteNames.feedback, ['saran', 'kesan', 'tpm', 'feedback']),
       ];
 

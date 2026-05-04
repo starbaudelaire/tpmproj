@@ -3,7 +3,7 @@ const { z } = require('zod');
 const slugify = require('slugify');
 const prisma = require('../config/prisma');
 const asyncHandler = require('../utils/asyncHandler');
-const { auth, requireAdmin } = require('../middleware/auth');
+const { auth, optionalAuth, requireAdmin } = require('../middleware/auth');
 const AppError = require('../utils/AppError');
 const router = express.Router();
 
@@ -32,6 +32,18 @@ const destinationSelect = {
   createdAt: true,
   updatedAt: true,
 };
+
+
+async function withFavoriteFlags(req, destinations) {
+  if (!req.user || !destinations.length) return destinations;
+  const ids = destinations.map((item) => item.id);
+  const favorites = await prisma.userFavorite.findMany({
+    where: { userId: req.user.id, destinationId: { in: ids } },
+    select: { destinationId: true },
+  });
+  const favoriteIds = new Set(favorites.map((item) => item.destinationId));
+  return destinations.map((item) => ({ ...item, isFavorite: favoriteIds.has(item.id) }));
+}
 
 function normalizeType(type) {
   if (!type) return undefined;
@@ -105,7 +117,7 @@ async function uniqueSlug(name, ignoredId) {
   }
 }
 
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', optionalAuth, asyncHandler(async (req, res) => {
   const { search, type, category, tag, featured } = req.query;
   const where = { isActive: true };
   const andFilters = [];
@@ -141,16 +153,16 @@ router.get('/', asyncHandler(async (req, res) => {
     select: destinationSelect,
     orderBy: [{ isFeatured: 'desc' }, { rating: 'desc' }, { name: 'asc' }],
   });
-  res.json(data);
+  res.json(await withFavoriteFlags(req, data));
 }));
 
-router.get('/featured', asyncHandler(async (req, res) => {
+router.get('/featured', optionalAuth, asyncHandler(async (req, res) => {
   const data = await prisma.destination.findMany({
     where: { isActive: true, isFeatured: true },
     select: destinationSelect,
     orderBy: { rating: 'desc' },
   });
-  res.json(data);
+  res.json(await withFavoriteFlags(req, data));
 }));
 
 
@@ -174,7 +186,7 @@ router.get('/meta/tags', asyncHandler(async (req, res) => {
   res.json(tags);
 }));
 
-router.get('/:idOrSlug', asyncHandler(async (req, res) => {
+router.get('/:idOrSlug', optionalAuth, asyncHandler(async (req, res) => {
   const idOrSlug = req.params.idOrSlug;
   const item = await prisma.destination.findFirst({
     where: {
@@ -184,7 +196,8 @@ router.get('/:idOrSlug', asyncHandler(async (req, res) => {
     select: destinationSelect,
   });
   if (!item) throw new AppError('Destinasi tidak ditemukan.', 404, 'DESTINATION_NOT_FOUND');
-  res.json(item);
+  const [flagged] = await withFavoriteFlags(req, [item]);
+  res.json(flagged);
 }));
 
 const destinationSchema = z.object({

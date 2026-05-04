@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +11,7 @@ class WeatherModel {
     required this.humidity,
     required this.windSpeed,
     required this.uvIndex,
+    required this.locationLabel,
     this.isStale = false,
   });
 
@@ -20,6 +20,7 @@ class WeatherModel {
   final int humidity;
   final double windSpeed;
   final double uvIndex;
+  final String locationLabel;
   final bool isStale;
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +29,7 @@ class WeatherModel {
         'humidity': humidity,
         'windSpeed': windSpeed,
         'uvIndex': uvIndex,
+        'locationLabel': locationLabel,
       };
 
   factory WeatherModel.fromJson(Map<String, dynamic> json, {bool isStale = false}) {
@@ -37,6 +39,7 @@ class WeatherModel {
       humidity: (json['humidity'] as num?)?.round() ?? 0,
       windSpeed: (json['windSpeed'] as num?)?.toDouble() ?? 0,
       uvIndex: (json['uvIndex'] as num?)?.toDouble() ?? 0,
+      locationLabel: json['locationLabel']?.toString() ?? 'Kota Yogyakarta, DI Yogyakarta',
       isStale: isStale,
     );
   }
@@ -47,6 +50,7 @@ class WeatherModel {
         humidity: 70,
         windSpeed: 1.8,
         uvIndex: 4.0,
+        locationLabel: 'Kota Yogyakarta, DI Yogyakarta',
         isStale: true,
       );
 }
@@ -62,8 +66,10 @@ class WeatherRemoteDataSource {
   static const _openMeteoUrl = 'https://api.open-meteo.com/v1/forecast';
 
   Future<WeatherModel> fetchWeather({double lat = -7.7971, double lon = 110.3708}) async {
-    final cached = _prefs.getString(AppConstants.weatherCacheKey);
-    final cachedAt = _prefs.getInt(AppConstants.weatherCacheTimeKey);
+    final cacheKey = '${AppConstants.weatherCacheKey}_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
+    final cacheTimeKey = '${AppConstants.weatherCacheTimeKey}_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
+    final cached = _prefs.getString(cacheKey) ?? _prefs.getString(AppConstants.weatherCacheKey);
+    final cachedAt = _prefs.getInt(cacheTimeKey) ?? _prefs.getInt(AppConstants.weatherCacheTimeKey);
     final hasFreshCache = cached != null &&
         cachedAt != null &&
         DateTime.now().millisecondsSinceEpoch - cachedAt < const Duration(minutes: 30).inMilliseconds;
@@ -90,10 +96,7 @@ class WeatherRemoteDataSource {
       final data = response.data ?? <String, dynamic>{};
       final current = data['current'] as Map<String, dynamic>? ?? <String, dynamic>{};
       final hourly = data['hourly'] as Map<String, dynamic>? ?? <String, dynamic>{};
-      final uvValues = hourly['uv_index'] as List<dynamic>? ?? const <dynamic>[];
-      final double uvIndex = uvValues.isNotEmpty
-          ? ((uvValues.first as num?)?.toDouble() ?? 0.0)
-          : 0.0;
+      final uvIndex = _currentUvIndex(hourly);
 
       final weather = WeatherModel(
         temp: (current['temperature_2m'] as num?)?.toDouble() ?? 0,
@@ -101,10 +104,11 @@ class WeatherRemoteDataSource {
         humidity: (current['relative_humidity_2m'] as num?)?.round() ?? 0,
         windSpeed: (current['wind_speed_10m'] as num?)?.toDouble() ?? 0,
         uvIndex: uvIndex,
+        locationLabel: _locationLabel(lat, lon),
       );
 
-      await _prefs.setString(AppConstants.weatherCacheKey, jsonEncode(weather.toJson()));
-      await _prefs.setInt(AppConstants.weatherCacheTimeKey, DateTime.now().millisecondsSinceEpoch);
+      await _prefs.setString(cacheKey, jsonEncode(weather.toJson()));
+      await _prefs.setInt(cacheTimeKey, DateTime.now().millisecondsSinceEpoch);
       return weather;
     } catch (_) {
       if (cached != null) {
@@ -112,6 +116,52 @@ class WeatherRemoteDataSource {
       }
       return WeatherModel.unavailable();
     }
+  }
+
+  double _currentUvIndex(Map<String, dynamic> hourly) {
+    final values = hourly['uv_index'] as List<dynamic>? ?? const <dynamic>[];
+    if (values.isEmpty) return _estimatedUvIndex();
+
+    final times = hourly['time'] as List<dynamic>? ?? const <dynamic>[];
+    var index = DateTime.now().hour.clamp(0, values.length - 1).toInt();
+    if (times.isNotEmpty && times.length == values.length) {
+      final now = DateTime.now();
+      for (var i = 0; i < times.length; i++) {
+        final parsed = DateTime.tryParse(times[i].toString());
+        if (parsed != null && parsed.hour == now.hour) {
+          index = i;
+          break;
+        }
+      }
+    }
+
+    final raw = (values[index] as num?)?.toDouble() ?? 0.0;
+    if (raw > 0) return raw;
+    return _estimatedUvIndex();
+  }
+
+  double _estimatedUvIndex() {
+    final hour = DateTime.now().hour;
+    if (hour < 6 || hour >= 18) return 0.0;
+    if (hour < 9 || hour >= 16) return 1.0;
+    if (hour < 11 || hour >= 14) return 3.0;
+    return 5.0;
+  }
+
+  String _locationLabel(double lat, double lon) {
+    // Heuristik ringan supaya banner tidak hanya menulis "Yogyakarta".
+    // Ini cukup untuk demo LBS tanpa menambah package geocoding baru.
+    if (lat >= -7.86 && lat <= -7.72 && lon >= 110.32 && lon <= 110.43) {
+      if (lat < -7.83) return 'Sewon, Bantul, DI Yogyakarta';
+      if (lon > 110.39) return 'Banguntapan, Bantul, DI Yogyakarta';
+      if (lat > -7.76) return 'Depok, Sleman, DI Yogyakarta';
+      return 'Kota Yogyakarta, DI Yogyakarta';
+    }
+    if (lat > -7.75 && lon >= 110.30 && lon <= 110.45) return 'Sleman, DI Yogyakarta';
+    if (lat < -7.86 && lon >= 110.25 && lon <= 110.45) return 'Bantul, DI Yogyakarta';
+    if (lon < 110.25) return 'Kulon Progo, DI Yogyakarta';
+    if (lon > 110.45) return 'Gunungkidul, DI Yogyakarta';
+    return 'DI Yogyakarta';
   }
 
   String _conditionFromCode(int? code) {
