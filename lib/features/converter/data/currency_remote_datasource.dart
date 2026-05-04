@@ -23,7 +23,7 @@ class CurrencyRemoteDataSource {
         DateTime.now().millisecondsSinceEpoch - cachedAt <
             const Duration(hours: 1).inMilliseconds;
 
-    if (cached != null && cacheStillFresh) {
+    if (cached != null && cached.length > 10 && cacheStillFresh) {
       return cached;
     }
 
@@ -41,26 +41,47 @@ class CurrencyRemoteDataSource {
         throw const FormatException('Currency response does not contain rates');
       }
 
-      final rates = rawRates.map(
-        (key, value) => MapEntry(
-          key.toString().toUpperCase(),
-          (value as num).toDouble(),
-        ),
+      final rates = <String, double>{};
+      for (final entry in rawRates.entries) {
+        final code = entry.key.toString().trim().toUpperCase();
+        final value = entry.value;
+        if (code.length != 3 || value is! num || value <= 0) continue;
+        rates[code] = value.toDouble();
+      }
+
+      // Endpoint memakai USD sebagai base, pastikan USD tetap tersedia.
+      rates['USD'] = rates['USD'] ?? 1;
+      if (!rates.containsKey('IDR')) {
+        throw const FormatException('IDR rate not found');
+      }
+
+      final sortedRates = Map.fromEntries(
+        rates.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
       );
 
-      final subset = <String, double>{
-        'USD': rates['USD'] ?? 1,
-        'IDR': rates['IDR'] ?? (throw const FormatException('IDR rate not found')),
-        'EUR': rates['EUR'] ?? (throw const FormatException('EUR rate not found')),
-      };
-
-      await _writeCache(subset);
-      return subset;
+      await _writeCache(sortedRates);
+      return sortedRates;
     } catch (_) {
       // Kalau API gagal tapi ada cache lama, tetap pakai cache lama.
-      if (cached != null) return cached;
+      if (cached != null && cached.isNotEmpty) return cached;
 
-      final fallback = <String, double>{'USD': 1, 'IDR': 16000, 'EUR': 0.92};
+      // Fallback hanya untuk mode offline pertama kali. Nilai ini bukan sumber utama.
+      final fallback = <String, double>{
+        'AUD': 1.52,
+        'CAD': 1.36,
+        'CHF': 0.91,
+        'CNY': 7.20,
+        'EUR': 0.92,
+        'GBP': 0.79,
+        'IDR': 16000,
+        'JPY': 150.0,
+        'KRW': 1330.0,
+        'MYR': 4.70,
+        'SAR': 3.75,
+        'SGD': 1.35,
+        'THB': 36.0,
+        'USD': 1,
+      };
       await _writeCache(fallback);
       return fallback;
     }
@@ -74,12 +95,13 @@ class CurrencyRemoteDataSource {
       final decoded = jsonDecode(cached);
       if (decoded is! Map) return null;
 
-      return decoded.map(
-        (key, value) => MapEntry(
-          key.toString().toUpperCase(),
-          (value as num).toDouble(),
-        ),
-      );
+      final rates = <String, double>{};
+      for (final entry in decoded.entries) {
+        final value = entry.value;
+        if (value is! num || value <= 0) continue;
+        rates[entry.key.toString().toUpperCase()] = value.toDouble();
+      }
+      return rates;
     } catch (_) {
       return null;
     }

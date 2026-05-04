@@ -66,6 +66,7 @@ class TpmAboutScreen extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _Header extends StatelessWidget {
   const _Header();
 

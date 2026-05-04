@@ -46,6 +46,11 @@ class FloatingTabBar extends StatelessWidget {
         icon: CupertinoIcons.person,
         activeIcon: CupertinoIcons.person_fill,
       ),
+      _TabItem(
+        label: 'TPM',
+        icon: CupertinoIcons.doc_text,
+        activeIcon: CupertinoIcons.doc_text_fill,
+      ),
     ];
 
     return Positioned(
@@ -59,7 +64,7 @@ class FloatingTabBar extends StatelessWidget {
             builder: (context, constraints) {
               final availableWidth =
                   constraints.maxWidth.isFinite ? constraints.maxWidth : 360.0;
-              final barWidth = availableWidth.clamp(280.0, 360.0);
+              final barWidth = availableWidth.clamp(300.0, 410.0);
 
               return ClipRRect(
                 borderRadius: BorderRadius.circular(AppSpacing.tabBarRadius),

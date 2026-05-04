@@ -302,6 +302,7 @@ class _QuizErrorCard extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _QuizHeader extends StatelessWidget {
   const _QuizHeader({
     required this.phase,

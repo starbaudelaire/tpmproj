@@ -38,6 +38,62 @@ function normalizeType(type) {
   return String(type).toUpperCase();
 }
 
+function normalizeText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function categoryAliases(value) {
+  const v = normalizeText(value);
+  const map = {
+    budaya: ['budaya', 'culture', 'cultural', 'heritage', 'keraton', 'tradisi', 'jawa'],
+    culture: ['budaya', 'culture', 'cultural', 'heritage', 'keraton', 'tradisi', 'jawa'],
+    sejarah: ['sejarah', 'history', 'historical', 'heritage', 'museum', 'kolonial'],
+    history: ['sejarah', 'history', 'historical', 'heritage', 'museum'],
+    alam: ['alam', 'nature', 'natural', 'pantai', 'gunung', 'goa', 'hutan', 'bukit'],
+    nature: ['alam', 'nature', 'natural', 'pantai', 'gunung', 'goa', 'hutan', 'bukit'],
+    kuliner: ['kuliner', 'culinary', 'food', 'makanan', 'gudeg', 'kopi', 'sate'],
+    culinary: ['kuliner', 'culinary', 'food', 'makanan', 'gudeg', 'kopi', 'sate'],
+    belanja: ['belanja', 'shopping', 'oleh oleh', 'oleh-oleh', 'pasar', 'gift'],
+    shopping: ['belanja', 'shopping', 'oleh oleh', 'oleh-oleh', 'pasar', 'gift'],
+    seni: ['seni', 'art', 'museum', 'galeri', 'batik', 'lukisan'],
+    art: ['seni', 'art', 'museum', 'galeri', 'batik', 'lukisan'],
+    aktivitas: ['aktivitas', 'activity', 'adventure', 'outbound', 'camping', 'hiking'],
+    activity: ['aktivitas', 'activity', 'adventure', 'outbound', 'camping', 'hiking'],
+    foto: ['foto', 'photo', 'photospot', 'spot foto', 'instagramable', 'view'],
+    photo: ['foto', 'photo', 'photospot', 'spot foto', 'instagramable', 'view'],
+    keluarga: ['keluarga', 'family', 'edukasi', 'anak', 'rekreasi'],
+    family: ['keluarga', 'family', 'edukasi', 'anak', 'rekreasi'],
+  };
+  return [...new Set([v, ...(map[v] || [])])].filter(Boolean);
+}
+
+function typeValuesFor(value) {
+  const aliases = categoryAliases(value);
+  const values = new Set();
+  if (aliases.some((alias) => ['budaya', 'culture', 'cultural', 'heritage', 'sejarah', 'history', 'museum', 'seni', 'art'].includes(alias))) values.add('CULTURE');
+  if (aliases.some((alias) => ['kuliner', 'culinary', 'food', 'makanan', 'gudeg', 'kopi', 'sate'].includes(alias))) values.add('CULINARY');
+  if (aliases.some((alias) => ['alam', 'nature', 'natural', 'pantai', 'gunung', 'goa', 'hutan', 'bukit', 'aktivitas', 'activity', 'foto', 'photo', 'belanja', 'shopping', 'keluarga', 'family'].includes(alias))) values.add('TOURISM');
+  const upper = String(value || '').toUpperCase();
+  if (['TOURISM', 'CULINARY', 'CULTURE'].includes(upper)) values.add(upper);
+  return [...values];
+}
+
+function categoryWhere(value) {
+  const aliases = categoryAliases(value);
+  if (!aliases.length) return undefined;
+  return {
+    OR: [
+      ...aliases.map((alias) => ({ category: { contains: alias, mode: 'insensitive' } })),
+      ...typeValuesFor(value).map((type) => ({ type })),
+      ...aliases.map((alias) => ({ tags: { has: alias } })),
+    ],
+  };
+}
+
 async function uniqueSlug(name, ignoredId) {
   const base = slugify(name, { lower: true, strict: true }) || `destinasi-${Date.now()}`;
   let slug = base;
@@ -52,20 +108,34 @@ async function uniqueSlug(name, ignoredId) {
 router.get('/', asyncHandler(async (req, res) => {
   const { search, type, category, tag, featured } = req.query;
   const where = { isActive: true };
+  const andFilters = [];
   const normalizedType = normalizeType(type);
+
   if (normalizedType) where.type = normalizedType;
-  if (category) where.category = { contains: String(category), mode: 'insensitive' };
-  if (tag) where.tags = { has: String(tag) };
+  if (category) andFilters.push(categoryWhere(category));
+  if (tag) andFilters.push(categoryWhere(tag));
   if (featured === 'true') where.isFeatured = true;
+
   if (search) {
     const value = String(search);
-    where.OR = [
-      { name: { contains: value, mode: 'insensitive' } },
-      { description: { contains: value, mode: 'insensitive' } },
-      { category: { contains: value, mode: 'insensitive' } },
-      { tags: { has: value } },
-    ];
+    const aliases = categoryAliases(value);
+    andFilters.push({
+      OR: [
+        { name: { contains: value, mode: 'insensitive' } },
+        { description: { contains: value, mode: 'insensitive' } },
+        { story: { contains: value, mode: 'insensitive' } },
+        { localInsight: { contains: value, mode: 'insensitive' } },
+        { address: { contains: value, mode: 'insensitive' } },
+        { category: { contains: value, mode: 'insensitive' } },
+        ...typeValuesFor(value).map((itemType) => ({ type: itemType })),
+        ...aliases.map((alias) => ({ tags: { has: alias } })),
+      ],
+    });
   }
+
+  const cleanedFilters = andFilters.filter(Boolean);
+  if (cleanedFilters.length) where.AND = cleanedFilters;
+
   const data = await prisma.destination.findMany({
     where,
     select: destinationSelect,
@@ -81,6 +151,27 @@ router.get('/featured', asyncHandler(async (req, res) => {
     orderBy: { rating: 'desc' },
   });
   res.json(data);
+}));
+
+
+router.get('/meta/categories', asyncHandler(async (req, res) => {
+  res.json([
+    { label: 'Budaya', query: 'Budaya' },
+    { label: 'Sejarah', query: 'Sejarah' },
+    { label: 'Alam', query: 'Alam' },
+    { label: 'Kuliner', query: 'Kuliner' },
+    { label: 'Belanja', query: 'Belanja' },
+    { label: 'Seni', query: 'Seni' },
+    { label: 'Aktivitas', query: 'Aktivitas' },
+    { label: 'Foto', query: 'Foto' },
+    { label: 'Keluarga', query: 'Keluarga' },
+  ]);
+}));
+
+router.get('/meta/tags', asyncHandler(async (req, res) => {
+  const rows = await prisma.destination.findMany({ where: { isActive: true }, select: { tags: true } });
+  const tags = [...new Set(rows.flatMap((row) => row.tags || []))].sort((a, b) => a.localeCompare(b));
+  res.json(tags);
 }));
 
 router.get('/:idOrSlug', asyncHandler(async (req, res) => {

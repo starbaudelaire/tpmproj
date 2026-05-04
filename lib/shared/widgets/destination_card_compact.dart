@@ -38,29 +38,13 @@ class DestinationCardCompact extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: safeImageUrl.isEmpty
-                  ? Container(
-                      width: 74,
-                      height: 74,
-                      color: CupertinoColors.white.withOpacity(0.05),
-                      child: const Icon(
-                        CupertinoIcons.photo,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
+                  ? _CompactImageFallback(destination: destination)
                   : CachedNetworkImage(
                       imageUrl: safeImageUrl,
                       width: 74,
                       height: 74,
                       fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => Container(
-                        width: 74,
-                        height: 74,
-                        color: CupertinoColors.white.withOpacity(0.05),
-                        child: const Icon(
-                          CupertinoIcons.photo,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      errorWidget: (context, url, error) => _CompactImageFallback(destination: destination),
                     ),
             ),
             const SizedBox(width: 12),
@@ -105,3 +89,43 @@ class DestinationCardCompact extends StatelessWidget {
     );
   }
 }
+
+
+class _CompactImageFallback extends StatelessWidget {
+  const _CompactImageFallback({required this.destination});
+
+  final DestinationModel destination;
+
+  @override
+  Widget build(BuildContext context) {
+    final source = '${destination.category} ${destination.type} ${destination.tags.join(' ')}'.toLowerCase();
+    final icon = source.contains('kuliner') || source.contains('culinary')
+        ? CupertinoIcons.flame_fill
+        : source.contains('alam') || source.contains('nature') || source.contains('pantai')
+            ? CupertinoIcons.leaf_arrow_circlepath
+            : source.contains('sejarah') || source.contains('history')
+                ? CupertinoIcons.book_fill
+                : source.contains('foto') || source.contains('photo')
+                    ? CupertinoIcons.camera_fill
+                    : CupertinoIcons.map_fill;
+
+    return Container(
+      width: 74,
+      height: 74,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.accentSecondary.withOpacity(0.26),
+            AppColors.accentPrimary.withOpacity(0.20),
+            AppColors.accentTertiary.withOpacity(0.14),
+          ],
+        ),
+      ),
+      child: Icon(icon, color: AppColors.textPrimary.withOpacity(0.72), size: 25),
+    );
+  }
+}
+

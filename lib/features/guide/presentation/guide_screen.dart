@@ -151,6 +151,7 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
   }
 }
 
+// ignore: unused_element
 class _GuideHeader extends StatelessWidget {
   const _GuideHeader({required this.onClear});
 

@@ -14,6 +14,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/auth/data/auth_local_datasource.dart';
 import '../../../shared/widgets/bottom_sheet_wrapper.dart';
+import '../../../shared/widgets/glass_card.dart';
 import '../../../shared/widgets/loading_skeleton.dart';
 import 'home_controller.dart';
 import 'widgets/category_grid.dart';
@@ -153,6 +154,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 132),
                 sliver: SliverList.list(
                   children: [
+                    const _HomeSearchBar(),
+                    const SizedBox(height: 18),
                     weather.when(
                       data: (value) => WeatherBanner(weather: value),
                       loading: () => const LoadingSkeleton(height: 124),
@@ -160,16 +163,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 26),
                     const _SectionHeader(
-                      title: 'Categories',
+                      title: 'Kategori Wisata',
                       subtitle:
-                          'Choose your interest to get personalized recommendations.',
+                          'Pilih suasana jalan-jalan yang kamu mau.',
                     ),
                     const SizedBox(height: 12),
                     const CategoryGrid(),
                     const SizedBox(height: 30),
                     const _SectionHeader(
                       title: 'Destinasi Unggulan',
-                      subtitle: 'Best options picked by our local experts.',
+                      subtitle: 'Pilihan tempat terbaik dari kurasi JogjaSplorasi.',
                     ),
                     const SizedBox(height: 12),
                     featured.when(
@@ -181,8 +184,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 30),
                     _SectionHeader(
-                      title: 'Near you',
-                      subtitle: 'Discover places close to your location.',
+                      title: 'Terdekat dari Lokasimu',
+                      subtitle: 'Rekomendasi yang paling mudah kamu datangi.',
                       actionLabel: 'Jelajahi',
                       onActionTap: () => context.go(RouteNames.explore),
                     ),
@@ -196,9 +199,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 30),
                     const _SectionHeader(
-                      title: 'Panduan Cepat',
+                      title: 'Menu Utama',
                       subtitle:
-                          'Additional info, tips, or tools to enhance the travel experience.',
+                          'Empat fitur praktis untuk menemani perjalananmu di Jogja.',
                     ),
                     const SizedBox(height: 12),
                     const QuickGuideRow(),
@@ -259,6 +262,77 @@ class _LiquidHomeHero extends StatelessWidget {
           // NOTIFICATION BUTTON
           _NotificationButton(onTap: onNotificationTap),
         ],
+      ),
+    );
+  }
+}
+
+
+class _HomeSearchBar extends StatefulWidget {
+  const _HomeSearchBar();
+
+  @override
+  State<_HomeSearchBar> createState() => _HomeSearchBarState();
+}
+
+class _HomeSearchBarState extends State<_HomeSearchBar> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _setPressed(true),
+      onTapCancel: () => _setPressed(false),
+      onTapUp: (_) {
+        _setPressed(false);
+        HapticFeedback.selectionClick();
+        context.push(RouteNames.globalSearch);
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.985 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: GlassCard(
+          blur: 30,
+          opacity: 0.073,
+          borderRadius: 20,
+          borderColor: CupertinoColors.white.withOpacity(0.10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          child: Row(
+            children: [
+              Icon(
+                CupertinoIcons.search,
+                size: 18,
+                color: AppColors.textSecondary.withOpacity(0.85),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Cari candi, kuliner, pantai, atau fitur...',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.textRegular13.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                CupertinoIcons.chevron_right,
+                size: 15,
+                color: AppColors.textSecondary.withOpacity(0.7),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

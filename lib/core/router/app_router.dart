@@ -14,6 +14,7 @@ import '../../features/global_search/presentation/global_search_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/mini_game/presentation/mini_game_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/sensor_hub/presentation/sensor_hub_screen.dart';
 import '../../features/tpm_about/presentation/tpm_about_screen.dart';
 import '../../shared/widgets/floating_tab_bar.dart';
@@ -22,7 +23,15 @@ import 'route_names.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> rootNavigatorKey =
-      GlobalKey<NavigatorState>();
+      GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+  static final GlobalKey<NavigatorState> _homeNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'homeBranchNavigator');
+  static final GlobalKey<NavigatorState> _exploreNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'exploreBranchNavigator');
+  static final GlobalKey<NavigatorState> _guideNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'guideBranchNavigator');
+  static final GlobalKey<NavigatorState> _profileNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'profileBranchNavigator');
 
   static GoRouter createRouter(WidgetRef ref, {required bool initialLoggedIn}) {
     return GoRouter(
@@ -47,6 +56,7 @@ class AppRouter {
           },
           branches: [
             StatefulShellBranch(
+              navigatorKey: _homeNavigatorKey,
               routes: [
                 GoRoute(
                   path: RouteNames.home,
@@ -56,6 +66,7 @@ class AppRouter {
               ],
             ),
             StatefulShellBranch(
+              navigatorKey: _exploreNavigatorKey,
               routes: [
                 GoRoute(
                   path: RouteNames.explore,
@@ -65,6 +76,7 @@ class AppRouter {
               ],
             ),
             StatefulShellBranch(
+              navigatorKey: _guideNavigatorKey,
               routes: [
                 GoRoute(
                   path: RouteNames.guide,
@@ -77,6 +89,7 @@ class AppRouter {
               ],
             ),
             StatefulShellBranch(
+              navigatorKey: _profileNavigatorKey,
               routes: [
                 GoRoute(
                   path: RouteNames.profile,
@@ -91,6 +104,12 @@ class AppRouter {
           path: RouteNames.globalSearch,
           pageBuilder: (context, state) =>
               const CupertinoPage(child: GlobalSearchScreen()),
+        ),
+
+        GoRoute(
+          path: RouteNames.editProfile,
+          pageBuilder: (context, state) =>
+              const CupertinoPage(child: EditProfileScreen()),
         ),
         GoRoute(
           path: RouteNames.feedback,
@@ -150,7 +169,10 @@ class _MainShell extends StatelessWidget {
             currentIndex: _shellIndexToNavIndex(navigationShell.currentIndex),
             onTap: (index) {
               final branchIndex = _navIndexToShellIndex(index);
-              if (branchIndex == null) return;
+              if (branchIndex == null) {
+                if (index == 4) context.push(RouteNames.feedback);
+                return;
+              }
 
               navigationShell.goBranch(
                 branchIndex,

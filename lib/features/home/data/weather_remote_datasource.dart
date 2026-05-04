@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
 
 class WeatherModel {
@@ -33,21 +32,21 @@ class WeatherModel {
 
   factory WeatherModel.fromJson(Map<String, dynamic> json, {bool isStale = false}) {
     return WeatherModel(
-      temp: (json['temp'] as num).toDouble(),
-      condition: json['condition'] as String,
-      humidity: json['humidity'] as int,
-      windSpeed: (json['windSpeed'] as num).toDouble(),
-      uvIndex: (json['uvIndex'] as num).toDouble(),
+      temp: (json['temp'] as num?)?.toDouble() ?? 0,
+      condition: json['condition']?.toString() ?? 'Cuaca Jogja',
+      humidity: (json['humidity'] as num?)?.round() ?? 0,
+      windSpeed: (json['windSpeed'] as num?)?.toDouble() ?? 0,
+      uvIndex: (json['uvIndex'] as num?)?.toDouble() ?? 0,
       isStale: isStale,
     );
   }
 
   factory WeatherModel.unavailable() => WeatherModel(
-        temp: 0,
-        condition: 'Cuaca belum tersedia',
-        humidity: 0,
-        windSpeed: 0,
-        uvIndex: 0,
+        temp: 27,
+        condition: 'Cuaca belum tersinkron',
+        humidity: 70,
+        windSpeed: 1.8,
+        uvIndex: 4.0,
         isStale: true,
       );
 }
@@ -60,38 +59,91 @@ class WeatherRemoteDataSource {
   final Dio _dio;
   final SharedPreferences _prefs;
 
+  static const _openMeteoUrl = 'https://api.open-meteo.com/v1/forecast';
+
   Future<WeatherModel> fetchWeather({double lat = -7.7971, double lon = 110.3708}) async {
     final cached = _prefs.getString(AppConstants.weatherCacheKey);
     final cachedAt = _prefs.getInt(AppConstants.weatherCacheTimeKey);
-    if (cached != null && cachedAt != null &&
-        DateTime.now().millisecondsSinceEpoch - cachedAt < const Duration(minutes: 30).inMilliseconds) {
-      return WeatherModel.fromJson(jsonDecode(cached) as Map<String, dynamic>);
-    }
+    final hasFreshCache = cached != null &&
+        cachedAt != null &&
+        DateTime.now().millisecondsSinceEpoch - cachedAt < const Duration(minutes: 30).inMilliseconds;
 
-    if (ApiConstants.weatherApiKey.isEmpty) {
-      if (cached != null) return WeatherModel.fromJson(jsonDecode(cached) as Map<String, dynamic>, isStale: true);
-      return WeatherModel.unavailable();
+    if (hasFreshCache) {
+      return WeatherModel.fromJson(jsonDecode(cached) as Map<String, dynamic>);
     }
 
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        ApiConstants.weatherBaseUrl,
-        queryParameters: {'lat': lat, 'lon': lon, 'appid': ApiConstants.weatherApiKey, 'units': 'metric', 'lang': 'id'},
+        _openMeteoUrl,
+        queryParameters: {
+          'latitude': lat,
+          'longitude': lon,
+          'current': 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m',
+          'hourly': 'uv_index',
+          'forecast_days': 1,
+          'timezone': 'Asia/Jakarta',
+          'wind_speed_unit': 'ms',
+        },
+        options: Options(responseType: ResponseType.json),
       );
+
       final data = response.data ?? <String, dynamic>{};
+      final current = data['current'] as Map<String, dynamic>? ?? <String, dynamic>{};
+      final hourly = data['hourly'] as Map<String, dynamic>? ?? <String, dynamic>{};
+      final uvValues = hourly['uv_index'] as List<dynamic>? ?? const <dynamic>[];
+      final double uvIndex = uvValues.isNotEmpty
+          ? ((uvValues.first as num?)?.toDouble() ?? 0.0)
+          : 0.0;
+
       final weather = WeatherModel(
-        temp: (data['main']['temp'] as num).toDouble(),
-        condition: (data['weather'] as List).first['description'] as String,
-        humidity: data['main']['humidity'] as int,
-        windSpeed: (data['wind']['speed'] as num).toDouble(),
-        uvIndex: 4.3,
+        temp: (current['temperature_2m'] as num?)?.toDouble() ?? 0,
+        condition: _conditionFromCode((current['weather_code'] as num?)?.toInt()),
+        humidity: (current['relative_humidity_2m'] as num?)?.round() ?? 0,
+        windSpeed: (current['wind_speed_10m'] as num?)?.toDouble() ?? 0,
+        uvIndex: uvIndex,
       );
+
       await _prefs.setString(AppConstants.weatherCacheKey, jsonEncode(weather.toJson()));
       await _prefs.setInt(AppConstants.weatherCacheTimeKey, DateTime.now().millisecondsSinceEpoch);
       return weather;
     } catch (_) {
-      if (cached != null) return WeatherModel.fromJson(jsonDecode(cached) as Map<String, dynamic>, isStale: true);
+      if (cached != null) {
+        return WeatherModel.fromJson(jsonDecode(cached) as Map<String, dynamic>, isStale: true);
+      }
       return WeatherModel.unavailable();
+    }
+  }
+
+  String _conditionFromCode(int? code) {
+    switch (code) {
+      case 0:
+        return 'Cerah, enak buat jalan-jalan';
+      case 1:
+      case 2:
+        return 'Cerah berawan';
+      case 3:
+        return 'Berawan';
+      case 45:
+      case 48:
+        return 'Berkabut tipis';
+      case 51:
+      case 53:
+      case 55:
+        return 'Gerimis ringan';
+      case 61:
+      case 63:
+      case 65:
+        return 'Hujan, siapkan payung';
+      case 80:
+      case 81:
+      case 82:
+        return 'Hujan lokal';
+      case 95:
+      case 96:
+      case 99:
+        return 'Hujan petir';
+      default:
+        return 'Cuaca Jogja terkini';
     }
   }
 }

@@ -73,7 +73,7 @@ class AuthLocalDataSource {
 
       // Backend/jaringan bermasalah tidak boleh memaksa logout.
       // Kalau token masih tersimpan dan user lokal ada, biarkan sesi tetap terbuka.
-      return currentUser() != null;
+      return await currentUser() != null;
     }
   }
 

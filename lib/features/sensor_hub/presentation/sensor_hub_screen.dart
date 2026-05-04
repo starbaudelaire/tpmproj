@@ -198,6 +198,7 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
   }
 }
 
+// ignore: unused_element
 class _SensorHeader extends StatelessWidget {
   const _SensorHeader({required this.isLive});
 

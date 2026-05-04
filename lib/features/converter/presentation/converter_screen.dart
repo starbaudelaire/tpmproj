@@ -90,6 +90,7 @@ class _ConverterScreenState extends ConsumerState<ConverterScreen> {
   }
 }
 
+// ignore: unused_element
 class _ConverterHeader extends StatelessWidget {
   const _ConverterHeader();
 

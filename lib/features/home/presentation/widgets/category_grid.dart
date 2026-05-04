@@ -1,58 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../features/explore/presentation/explore_controller.dart';
 import '../../../../shared/models/category.dart';
 import '../../../../shared/widgets/glass_card.dart';
 
-class CategoryGrid extends StatelessWidget {
+class CategoryGrid extends ConsumerWidget {
   const CategoryGrid({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const items = [
-      CategoryModel(
-        label: 'Hotel',
-        icon: CupertinoIcons.building_2_fill,
-        color: AppColors.accentSecondary,
-      ),
-      CategoryModel(
-        label: 'Nature',
-        icon: CupertinoIcons.leaf_arrow_circlepath,
-        color: AppColors.accentTertiary,
-      ),
-      CategoryModel(
-        label: 'Culinary',
-        icon: CupertinoIcons.flame_fill,
-        color: AppColors.accentPrimary,
-      ),
-      CategoryModel(
-        label: 'Gift',
-        icon: CupertinoIcons.bag_fill,
-        color: AppColors.textSecondary,
-      ),
-      CategoryModel(
-        label: 'Culture',
-        icon: CupertinoIcons.paintbrush_fill,
-        color: AppColors.textSecondary,
-      ),
-      CategoryModel(
-        label: 'Activity',
-        icon: CupertinoIcons.bolt_fill,
-        color: AppColors.textSecondary,
-      ),
-      CategoryModel(
-        label: 'History',
-        icon: CupertinoIcons.book_fill,
-        color: AppColors.accentSecondary,
-      ),
-      CategoryModel(
-        label: 'Photo',
-        icon: CupertinoIcons.camera_fill,
-        color: AppColors.accentTertiary,
-      ),
+      CategoryModel(label: 'Budaya', icon: CupertinoIcons.paintbrush_fill, color: AppColors.accentSecondary),
+      CategoryModel(label: 'Alam', icon: CupertinoIcons.leaf_arrow_circlepath, color: AppColors.accentTertiary),
+      CategoryModel(label: 'Kuliner', icon: CupertinoIcons.flame_fill, color: AppColors.accentPrimary),
+      CategoryModel(label: 'Belanja', icon: CupertinoIcons.bag_fill, color: AppColors.textSecondary),
+      CategoryModel(label: 'Seni', icon: CupertinoIcons.music_note_2, color: AppColors.textSecondary),
+      CategoryModel(label: 'Aktivitas', icon: CupertinoIcons.bolt_fill, color: AppColors.textSecondary),
+      CategoryModel(label: 'Sejarah', icon: CupertinoIcons.book_fill, color: AppColors.accentSecondary),
+      CategoryModel(label: 'Foto', icon: CupertinoIcons.camera_fill, color: AppColors.accentTertiary),
     ];
 
     return GridView.builder(
@@ -71,7 +41,11 @@ class CategoryGrid extends StatelessWidget {
 
         return _LiquidCategoryTile(
           item: item,
-          onTap: () => context.go(RouteNames.explore),
+          onTap: () {
+            ref.read(activeCategoryProvider.notifier).state = item.label;
+            ref.read(searchQueryProvider.notifier).state = '';
+            context.go(RouteNames.explore);
+          },
         );
       },
     );
@@ -121,8 +95,7 @@ class _LiquidCategoryTileState extends State<_LiquidCategoryTile> {
             blur: 30,
             opacity: _pressed ? 0.12 : 0.085,
             borderRadius: 18,
-            borderColor:
-                _pressed ? item.color.withOpacity(0.38) : AppColors.glassBorder,
+            borderColor: _pressed ? item.color.withOpacity(0.38) : AppColors.glassBorder,
             padding: EdgeInsets.zero,
             child: Stack(
               children: [
@@ -154,17 +127,9 @@ class _LiquidCategoryTileState extends State<_LiquidCategoryTile> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: item.color.withOpacity(0.16),
-                            border: Border.all(
-                              color: CupertinoColors.white.withOpacity(0.055),
-                            ),
+                            border: Border.all(color: CupertinoColors.white.withOpacity(0.055)),
                           ),
-                          child: Center(
-                            child: Icon(
-                              item.icon,
-                              color: item.color,
-                              size: 18,
-                            ),
-                          ),
+                          child: Center(child: Icon(item.icon, color: item.color, size: 18)),
                         ),
                         const SizedBox(height: 7),
                         Padding(
@@ -175,10 +140,7 @@ class _LiquidCategoryTileState extends State<_LiquidCategoryTile> {
                               item.label,
                               maxLines: 1,
                               textAlign: TextAlign.center,
-                              style: CupertinoTheme.of(context)
-                                  .textTheme
-                                  .textStyle
-                                  .copyWith(
+                              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                     letterSpacing: 0,

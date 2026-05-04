@@ -232,6 +232,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         favoriteCount: data.favoriteCount,
                         destinationCount: data.destinationCount,
                       ),
+                      const SizedBox(height: 18),
+                      _ProfileSection(
+                        title: 'Identitas',
+                        children: [
+                          _ProfileMenuRow(
+                            title: 'Edit Profil',
+                            subtitle: 'Ubah nama tampilan dan foto profil',
+                            icon: CupertinoIcons.pencil_circle_fill,
+                            iconColor: AppColors.accentPrimary,
+                            onTap: () async {
+                              await context.push(RouteNames.editProfile);
+                              if (!mounted) return;
+                              await _loadProfileImage();
+                              setState(() {
+                                _profileFuture = _loadProfile();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 24),
                       _ProfileSection(
                         title: 'Ruang Jelajah',

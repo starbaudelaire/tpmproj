@@ -309,7 +309,7 @@ class _CategoryChips extends StatelessWidget {
       'Seni',
       'Aktivitas',
       'Sejarah',
-      'Photo',
+      'Foto',
     ];
 
     return SizedBox(

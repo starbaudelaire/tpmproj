@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/metric_card.dart';
 
 class QuickGuideRow extends StatelessWidget {
@@ -15,18 +16,10 @@ class QuickGuideRow extends StatelessWidget {
           children: [
             Expanded(
               child: MetricCard(
-                icon: CupertinoIcons.search,
-                label: 'Cari',
-                value: 'Global',
-                onTap: () => context.push(RouteNames.globalSearch),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: MetricCard(
                 icon: CupertinoIcons.money_dollar_circle,
-                label: 'Kurs',
-                value: 'IDR',
+                label: 'Konversi',
+                value: 'Kurs',
+                color: AppColors.accentPrimary,
                 onTap: () => context.push(RouteNames.converter),
               ),
             ),
@@ -34,8 +27,9 @@ class QuickGuideRow extends StatelessWidget {
             Expanded(
               child: MetricCard(
                 icon: CupertinoIcons.time,
-                label: 'Waktu',
-                value: 'WIB',
+                label: 'Konversi',
+                value: 'Waktu',
+                color: AppColors.accentTertiary,
                 onTap: () => context.push(RouteNames.converter),
               ),
             ),
@@ -46,18 +40,10 @@ class QuickGuideRow extends StatelessWidget {
           children: [
             Expanded(
               child: MetricCard(
-                icon: CupertinoIcons.waveform_path_ecg,
-                label: 'Sensor',
-                value: 'Shake',
-                onTap: () => context.push(RouteNames.sensor),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: MetricCard(
                 icon: CupertinoIcons.sparkles,
                 label: 'Guide AI',
                 value: 'Tanya',
+                color: AppColors.accentPrimary,
                 onTap: () => context.go(RouteNames.guide),
               ),
             ),
@@ -67,6 +53,7 @@ class QuickGuideRow extends StatelessWidget {
                 icon: CupertinoIcons.gamecontroller_fill,
                 label: 'Kuis',
                 value: 'Budaya',
+                color: AppColors.accentTertiary,
                 onTap: () => context.push(RouteNames.game),
               ),
             ),

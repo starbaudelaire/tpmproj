@@ -3,6 +3,34 @@ const prisma = require('../config/prisma');
 const asyncHandler = require('../utils/asyncHandler');
 const { auth: requireAuth } = require('../middleware/auth');
 
+
+function googleMapsUrl(destination) {
+  const lat = destination.latitude;
+  const lon = destination.longitude;
+  if (typeof lat === 'number' && typeof lon === 'number') {
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${destination.name} Yogyakarta`)}`;
+}
+
+function openStreetMapUrl(destination) {
+  const lat = destination.latitude;
+  const lon = destination.longitude;
+  if (typeof lat === 'number' && typeof lon === 'number') {
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+  }
+  return `https://www.openstreetmap.org/search?query=${encodeURIComponent(`${destination.name} Yogyakarta`)}`;
+}
+
+function enrichDestination(destination) {
+  return {
+    ...destination,
+    mapsUrl: googleMapsUrl(destination),
+    osmUrl: openStreetMapUrl(destination),
+    dataSource: 'CURATED_LOCAL_DATABASE',
+  };
+}
+
 const router = express.Router();
 router.use(requireAuth);
 
@@ -21,7 +49,7 @@ router.get('/bootstrap', asyncHandler(async (req, res) => {
 
   res.json({
     syncedAt: new Date().toISOString(),
-    destinations,
+    destinations: destinations.map(enrichDestination),
     favorites,
     visitedPlaces,
     preferences,

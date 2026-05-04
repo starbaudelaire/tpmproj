@@ -89,3 +89,14 @@ npx prisma migrate dev --name phase8_ai_tour_guide
 npm run db:seed
 npm run dev
 ```
+
+## Strategi data destinasi full gratis
+
+JogjaSplorasi sekarang memakai database destinasi kurasi sebagai sumber utama agar demo tetap stabil tanpa Google Places API berbayar.
+
+- Data destinasi lengkap ada di `backend/prisma/seed.js` dan masuk ke PostgreSQL melalui `npm run db:seed`.
+- API `/api/destinations` mengembalikan data dari database, bukan mock frontend.
+- Response destinasi dilengkapi `mapsUrl` dan `osmUrl` berbasis koordinat, sehingga user tetap bisa membuka rute tanpa API berbayar.
+- Dokumentasi lengkap ada di `backend/docs/FREE_DATA_STRATEGY.md`.
+
+Untuk update data destinasi, edit seed atau kelola melalui endpoint admin, lalu jalankan ulang seed/migrasi sesuai kebutuhan.

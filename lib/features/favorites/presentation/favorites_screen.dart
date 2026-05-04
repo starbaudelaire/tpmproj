@@ -147,6 +147,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 }
 
+// ignore: unused_element
 class _FavoritesHeader extends StatelessWidget {
   const _FavoritesHeader({required this.count});
 

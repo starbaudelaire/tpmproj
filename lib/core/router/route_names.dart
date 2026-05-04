@@ -5,6 +5,7 @@ abstract final class RouteNames {
   static const guide = '/guide';
   static const feedback = '/feedback';
   static const profile = '/profile';
+  static const editProfile = '/edit-profile';
   static const sensor = '/sensor';
   static const destination = '/destination';
   static const converter = '/converter';

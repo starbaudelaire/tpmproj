@@ -25,7 +25,20 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
   String from = 'USD';
   String to = 'IDR';
 
-  static const _currencies = ['USD', 'IDR', 'EUR'];
+  List<String> get _currencies {
+    final codes = widget.rates.keys.where((code) => code.length == 3).toList()
+      ..sort();
+    return codes.isEmpty ? const ['USD', 'IDR'] : codes;
+  }
+
+  @override
+  void didUpdateWidget(covariant CurrencyConverterView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final codes = _currencies;
+    if (!codes.contains(from)) from = codes.first;
+    if (!codes.contains(to)) to = codes.contains('IDR') ? 'IDR' : codes.last;
+    if (from == to && codes.length > 1) to = codes.firstWhere((c) => c != from);
+  }
 
   @override
   void dispose() {
@@ -33,40 +46,39 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
     super.dispose();
   }
 
-  void _cycleFrom() {
-    HapticFeedback.selectionClick();
-
-    setState(() {
-      final current = _currencies.indexOf(from);
-      from = _currencies[(current + 1) % _currencies.length];
-
-      if (from == to) {
-        final next = _currencies.indexOf(to);
-        to = _currencies[(next + 1) % _currencies.length];
-      }
-    });
-  }
-
-  void _cycleTo() {
-    HapticFeedback.selectionClick();
-
-    setState(() {
-      final current = _currencies.indexOf(to);
-      to = _currencies[(current + 1) % _currencies.length];
-
-      if (to == from) {
-        to = _currencies[(current + 2) % _currencies.length];
-      }
-    });
-  }
-
   void _swap() {
     HapticFeedback.selectionClick();
-
     setState(() {
       final previous = from;
       from = to;
       to = previous;
+    });
+  }
+
+  Future<void> _selectCurrency({required bool isFrom}) async {
+    HapticFeedback.selectionClick();
+    final selected = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (context) => _CurrencyPickerSheet(
+        currencies: _currencies,
+        selected: isFrom ? from : to,
+        title: isFrom ? 'Pilih mata uang asal' : 'Pilih mata uang tujuan',
+      ),
+    );
+
+    if (selected == null || !mounted) return;
+    setState(() {
+      if (isFrom) {
+        from = selected;
+        if (from == to && _currencies.length > 1) {
+          to = _currencies.firstWhere((code) => code != from);
+        }
+      } else {
+        to = selected;
+        if (to == from && _currencies.length > 1) {
+          from = _currencies.firstWhere((code) => code != to);
+        }
+      }
     });
   }
 
@@ -77,32 +89,17 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
   double get _result {
     final fromRate = widget.rates[from] ?? 1;
     final toRate = widget.rates[to] ?? 1;
-
     if (fromRate == 0) return 0;
-
     return _input / fromRate * toRate;
   }
 
-  String _symbol(String code) {
-    return switch (code) {
-      'USD' => '\$',
-      'IDR' => 'Rp',
-      'EUR' => '€',
-      _ => code,
-    };
-  }
+  String _symbol(String code) => _currencyMeta[code]?.symbol ?? code;
 
-  String _name(String code) {
-    return switch (code) {
-      'USD' => 'US Dollar',
-      'IDR' => 'Indonesian Rupiah',
-      'EUR' => 'Euro',
-      _ => code,
-    };
-  }
+  String _name(String code) => _currencyMeta[code]?.name ?? code;
 
   String _format(double value) {
-    if (value >= 1000) return value.toStringAsFixed(0);
+    if (value >= 1000000) return value.toStringAsFixed(0);
+    if (value >= 1000) return value.toStringAsFixed(2);
     if (value >= 1) return value.toStringAsFixed(2);
     return value.toStringAsFixed(4);
   }
@@ -110,7 +107,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
   @override
   Widget build(BuildContext context) {
     final rateText =
-        '1 $from ≈ ${_format((widget.rates[to] ?? 1) / (widget.rates[from] ?? 1))} $to';
+        '1 $from ≈ ${_format((widget.rates[to] ?? 1) / (widget.rates[from] ?? 1))} $to • ${_currencies.length} mata uang tersedia';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,10 +144,11 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Convert travel budget between USD, IDR, and EUR.',
+                  'Pilih mata uang mancanegara secara fleksibel dari data exchange rate terbaru.',
                   style: AppTypography.textRegular13.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w400,
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -172,7 +170,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
                         code: from,
                         symbol: _symbol(from),
                         name: _name(from),
-                        onTap: _cycleFrom,
+                        onTap: () => _selectCurrency(isFrom: true),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -183,7 +181,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
                         code: to,
                         symbol: _symbol(to),
                         name: _name(to),
-                        onTap: _cycleTo,
+                        onTap: () => _selectCurrency(isFrom: false),
                       ),
                     ),
                   ],
@@ -200,10 +198,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
 }
 
 class _AmountInput extends StatelessWidget {
-  const _AmountInput({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _AmountInput({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -302,6 +297,8 @@ class _CurrencyTileState extends State<_CurrencyTile> {
                 ),
                 child: Text(
                   widget.symbol,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.textMedium15.copyWith(
                     color: AppColors.accentTertiary,
                     fontWeight: FontWeight.w400,
@@ -314,13 +311,24 @@ class _CurrencyTileState extends State<_CurrencyTile> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.code,
-                      style: AppTypography.textMedium15.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.15,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.code,
+                            style: AppTypography.textMedium15.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.15,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          CupertinoIcons.chevron_down,
+                          size: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -333,6 +341,164 @@ class _CurrencyTileState extends State<_CurrencyTile> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrencyPickerSheet extends StatefulWidget {
+  const _CurrencyPickerSheet({
+    required this.currencies,
+    required this.selected,
+    required this.title,
+  });
+
+  final List<String> currencies;
+  final String selected;
+  final String title;
+
+  @override
+  State<_CurrencyPickerSheet> createState() => _CurrencyPickerSheetState();
+}
+
+class _CurrencyPickerSheetState extends State<_CurrencyPickerSheet> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final filtered = widget.currencies.where((code) {
+      final meta = _currencyMeta[code];
+      return code.toLowerCase().contains(query) ||
+          (meta?.name.toLowerCase().contains(query) ?? false);
+    }).toList();
+
+    return CupertinoPopupSurface(
+      isSurfacePainted: false,
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.72,
+        decoration: const BoxDecoration(
+          color: Color(0xFF12121A),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 10, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: AppTypography.displaySemi20.copyWith(
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: CupertinoSearchTextField(
+                  controller: _searchController,
+                  placeholder: 'Cari negara, nama mata uang, atau kode',
+                  style: AppTypography.textRegular13.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => Container(
+                    height: 1,
+                    margin: const EdgeInsets.only(left: 68),
+                    color: CupertinoColors.white.withOpacity(0.06),
+                  ),
+                  itemBuilder: (context, index) {
+                    final code = filtered[index];
+                    final meta = _currencyMeta[code];
+                    final selected = code == widget.selected;
+                    return CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () => Navigator.of(context).pop(code),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.accentTertiary.withOpacity(0.14),
+                              ),
+                              child: Text(
+                                meta?.symbol ?? code,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.textMedium15.copyWith(
+                                  color: AppColors.accentTertiary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    code,
+                                    style: AppTypography.textMedium15.copyWith(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    meta?.name ?? 'Currency code $code',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.captionSmall11.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (selected)
+                              const Icon(
+                                CupertinoIcons.check_mark_circled_solid,
+                                color: AppColors.accentPrimary,
+                                size: 20,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -395,11 +561,7 @@ class _SwapButtonState extends State<_SwapButton> {
 }
 
 class _ResultPanel extends StatelessWidget {
-  const _ResultPanel({
-    required this.symbol,
-    required this.code,
-    required this.result,
-  });
+  const _ResultPanel({required this.symbol, required this.code, required this.result});
 
   final String symbol;
   final String code;
@@ -426,35 +588,27 @@ class _ResultPanel extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              Text(
-                symbol,
-                style: AppTypography.displaySemi22.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  result,
+                  '$symbol $result',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.displayBold34.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 36,
-                    letterSpacing: -1.2,
+                    fontSize: 31,
+                    letterSpacing: -1,
                   ),
                 ),
               ),
+              const SizedBox(width: 10),
+              Text(
+                code,
+                style: AppTypography.textMedium15.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            code,
-            style: AppTypography.captionSmall11.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
-            ),
           ),
         ],
       ),
@@ -470,19 +624,19 @@ class _RateHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      blur: 24,
-      opacity: 0.06,
-      borderRadius: 999,
-      borderColor: CupertinoColors.white.withOpacity(0.08),
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      blur: 26,
+      opacity: 0.066,
+      borderRadius: 20,
+      borderColor: CupertinoColors.white.withOpacity(0.09),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
       child: Row(
         children: [
           const Icon(
-            CupertinoIcons.info_circle,
+            CupertinoIcons.chart_bar_alt_fill,
             size: 15,
-            color: AppColors.textSecondary,
+            color: AppColors.accentTertiary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Expanded(
             child: Text(
               text,
@@ -497,3 +651,172 @@ class _RateHint extends StatelessWidget {
     );
   }
 }
+
+class _CurrencyMeta {
+  const _CurrencyMeta(this.name, this.symbol);
+  final String name;
+  final String symbol;
+}
+
+const _currencyMeta = <String, _CurrencyMeta>{
+  'AED': _CurrencyMeta('United Arab Emirates Dirham', 'د.إ'),
+  'AFN': _CurrencyMeta('Afghan Afghani', '؋'),
+  'ALL': _CurrencyMeta('Albanian Lek', 'L'),
+  'AMD': _CurrencyMeta('Armenian Dram', '֏'),
+  'ANG': _CurrencyMeta('Netherlands Antillean Guilder', 'ƒ'),
+  'AOA': _CurrencyMeta('Angolan Kwanza', 'Kz'),
+  'ARS': _CurrencyMeta('Argentine Peso', r'$'),
+  'AUD': _CurrencyMeta('Australian Dollar', r'$'),
+  'AWG': _CurrencyMeta('Aruban Florin', 'ƒ'),
+  'AZN': _CurrencyMeta('Azerbaijani Manat', '₼'),
+  'BAM': _CurrencyMeta('Bosnia-Herzegovina Convertible Mark', 'KM'),
+  'BBD': _CurrencyMeta('Barbadian Dollar', r'$'),
+  'BDT': _CurrencyMeta('Bangladeshi Taka', '৳'),
+  'BGN': _CurrencyMeta('Bulgarian Lev', 'лв'),
+  'BHD': _CurrencyMeta('Bahraini Dinar', '.د.ب'),
+  'BIF': _CurrencyMeta('Burundian Franc', 'FBu'),
+  'BMD': _CurrencyMeta('Bermudian Dollar', r'$'),
+  'BND': _CurrencyMeta('Brunei Dollar', r'$'),
+  'BOB': _CurrencyMeta('Bolivian Boliviano', 'Bs'),
+  'BRL': _CurrencyMeta('Brazilian Real', r'R$'),
+  'BSD': _CurrencyMeta('Bahamian Dollar', r'$'),
+  'BTN': _CurrencyMeta('Bhutanese Ngultrum', 'Nu.'),
+  'BWP': _CurrencyMeta('Botswana Pula', 'P'),
+  'BYN': _CurrencyMeta('Belarusian Ruble', 'Br'),
+  'BZD': _CurrencyMeta('Belize Dollar', r'$'),
+  'CAD': _CurrencyMeta('Canadian Dollar', r'$'),
+  'CDF': _CurrencyMeta('Congolese Franc', 'FC'),
+  'CHF': _CurrencyMeta('Swiss Franc', 'CHF'),
+  'CLP': _CurrencyMeta('Chilean Peso', r'$'),
+  'CNY': _CurrencyMeta('Chinese Yuan', '¥'),
+  'COP': _CurrencyMeta('Colombian Peso', r'$'),
+  'CRC': _CurrencyMeta('Costa Rican Colón', '₡'),
+  'CUP': _CurrencyMeta('Cuban Peso', r'$'),
+  'CVE': _CurrencyMeta('Cape Verdean Escudo', r'$'),
+  'CZK': _CurrencyMeta('Czech Koruna', 'Kč'),
+  'DJF': _CurrencyMeta('Djiboutian Franc', 'Fdj'),
+  'DKK': _CurrencyMeta('Danish Krone', 'kr'),
+  'DOP': _CurrencyMeta('Dominican Peso', r'$'),
+  'DZD': _CurrencyMeta('Algerian Dinar', 'دج'),
+  'EGP': _CurrencyMeta('Egyptian Pound', '£'),
+  'ERN': _CurrencyMeta('Eritrean Nakfa', 'Nfk'),
+  'ETB': _CurrencyMeta('Ethiopian Birr', 'Br'),
+  'EUR': _CurrencyMeta('Euro', '€'),
+  'FJD': _CurrencyMeta('Fijian Dollar', r'$'),
+  'FKP': _CurrencyMeta('Falkland Islands Pound', '£'),
+  'FOK': _CurrencyMeta('Faroese Króna', 'kr'),
+  'GBP': _CurrencyMeta('British Pound Sterling', '£'),
+  'GEL': _CurrencyMeta('Georgian Lari', '₾'),
+  'GGP': _CurrencyMeta('Guernsey Pound', '£'),
+  'GHS': _CurrencyMeta('Ghanaian Cedi', '₵'),
+  'GIP': _CurrencyMeta('Gibraltar Pound', '£'),
+  'GMD': _CurrencyMeta('Gambian Dalasi', 'D'),
+  'GNF': _CurrencyMeta('Guinean Franc', 'FG'),
+  'GTQ': _CurrencyMeta('Guatemalan Quetzal', 'Q'),
+  'GYD': _CurrencyMeta('Guyanese Dollar', r'$'),
+  'HKD': _CurrencyMeta('Hong Kong Dollar', r'$'),
+  'HNL': _CurrencyMeta('Honduran Lempira', 'L'),
+  'HRK': _CurrencyMeta('Croatian Kuna', 'kn'),
+  'HTG': _CurrencyMeta('Haitian Gourde', 'G'),
+  'HUF': _CurrencyMeta('Hungarian Forint', 'Ft'),
+  'IDR': _CurrencyMeta('Indonesian Rupiah', 'Rp'),
+  'ILS': _CurrencyMeta('Israeli New Shekel', '₪'),
+  'IMP': _CurrencyMeta('Manx Pound', '£'),
+  'INR': _CurrencyMeta('Indian Rupee', '₹'),
+  'IQD': _CurrencyMeta('Iraqi Dinar', 'ع.د'),
+  'IRR': _CurrencyMeta('Iranian Rial', '﷼'),
+  'ISK': _CurrencyMeta('Icelandic Króna', 'kr'),
+  'JEP': _CurrencyMeta('Jersey Pound', '£'),
+  'JMD': _CurrencyMeta('Jamaican Dollar', r'$'),
+  'JOD': _CurrencyMeta('Jordanian Dinar', 'د.ا'),
+  'JPY': _CurrencyMeta('Japanese Yen', '¥'),
+  'KES': _CurrencyMeta('Kenyan Shilling', 'KSh'),
+  'KGS': _CurrencyMeta('Kyrgyzstani Som', 'с'),
+  'KHR': _CurrencyMeta('Cambodian Riel', '៛'),
+  'KID': _CurrencyMeta('Kiribati Dollar', r'$'),
+  'KMF': _CurrencyMeta('Comorian Franc', 'CF'),
+  'KRW': _CurrencyMeta('South Korean Won', '₩'),
+  'KWD': _CurrencyMeta('Kuwaiti Dinar', 'د.ك'),
+  'KYD': _CurrencyMeta('Cayman Islands Dollar', r'$'),
+  'KZT': _CurrencyMeta('Kazakhstani Tenge', '₸'),
+  'LAK': _CurrencyMeta('Lao Kip', '₭'),
+  'LBP': _CurrencyMeta('Lebanese Pound', 'ل.ل'),
+  'LKR': _CurrencyMeta('Sri Lankan Rupee', 'Rs'),
+  'LRD': _CurrencyMeta('Liberian Dollar', r'$'),
+  'LSL': _CurrencyMeta('Lesotho Loti', 'L'),
+  'LYD': _CurrencyMeta('Libyan Dinar', 'ل.د'),
+  'MAD': _CurrencyMeta('Moroccan Dirham', 'د.م.'),
+  'MDL': _CurrencyMeta('Moldovan Leu', 'L'),
+  'MGA': _CurrencyMeta('Malagasy Ariary', 'Ar'),
+  'MKD': _CurrencyMeta('Macedonian Denar', 'ден'),
+  'MMK': _CurrencyMeta('Myanmar Kyat', 'K'),
+  'MNT': _CurrencyMeta('Mongolian Tögrög', '₮'),
+  'MOP': _CurrencyMeta('Macanese Pataca', 'P'),
+  'MRU': _CurrencyMeta('Mauritanian Ouguiya', 'UM'),
+  'MUR': _CurrencyMeta('Mauritian Rupee', '₨'),
+  'MVR': _CurrencyMeta('Maldivian Rufiyaa', 'Rf'),
+  'MWK': _CurrencyMeta('Malawian Kwacha', 'MK'),
+  'MXN': _CurrencyMeta('Mexican Peso', r'$'),
+  'MYR': _CurrencyMeta('Malaysian Ringgit', 'RM'),
+  'MZN': _CurrencyMeta('Mozambican Metical', 'MT'),
+  'NAD': _CurrencyMeta('Namibian Dollar', r'$'),
+  'NGN': _CurrencyMeta('Nigerian Naira', '₦'),
+  'NIO': _CurrencyMeta('Nicaraguan Córdoba', r'C$'),
+  'NOK': _CurrencyMeta('Norwegian Krone', 'kr'),
+  'NPR': _CurrencyMeta('Nepalese Rupee', '₨'),
+  'NZD': _CurrencyMeta('New Zealand Dollar', r'$'),
+  'OMR': _CurrencyMeta('Omani Rial', 'ر.ع.'),
+  'PAB': _CurrencyMeta('Panamanian Balboa', 'B/.'),
+  'PEN': _CurrencyMeta('Peruvian Sol', 'S/'),
+  'PGK': _CurrencyMeta('Papua New Guinean Kina', 'K'),
+  'PHP': _CurrencyMeta('Philippine Peso', '₱'),
+  'PKR': _CurrencyMeta('Pakistani Rupee', '₨'),
+  'PLN': _CurrencyMeta('Polish Złoty', 'zł'),
+  'PYG': _CurrencyMeta('Paraguayan Guaraní', '₲'),
+  'QAR': _CurrencyMeta('Qatari Riyal', 'ر.ق'),
+  'RON': _CurrencyMeta('Romanian Leu', 'lei'),
+  'RSD': _CurrencyMeta('Serbian Dinar', 'дин'),
+  'RUB': _CurrencyMeta('Russian Ruble', '₽'),
+  'RWF': _CurrencyMeta('Rwandan Franc', 'FRw'),
+  'SAR': _CurrencyMeta('Saudi Riyal', '﷼'),
+  'SBD': _CurrencyMeta('Solomon Islands Dollar', r'$'),
+  'SCR': _CurrencyMeta('Seychellois Rupee', '₨'),
+  'SDG': _CurrencyMeta('Sudanese Pound', 'ج.س.'),
+  'SEK': _CurrencyMeta('Swedish Krona', 'kr'),
+  'SGD': _CurrencyMeta('Singapore Dollar', r'$'),
+  'SHP': _CurrencyMeta('Saint Helena Pound', '£'),
+  'SLE': _CurrencyMeta('Sierra Leonean Leone', 'Le'),
+  'SOS': _CurrencyMeta('Somali Shilling', 'Sh'),
+  'SRD': _CurrencyMeta('Surinamese Dollar', r'$'),
+  'SSP': _CurrencyMeta('South Sudanese Pound', '£'),
+  'STN': _CurrencyMeta('São Tomé and Príncipe Dobra', 'Db'),
+  'SYP': _CurrencyMeta('Syrian Pound', '£'),
+  'SZL': _CurrencyMeta('Eswatini Lilangeni', 'L'),
+  'THB': _CurrencyMeta('Thai Baht', '฿'),
+  'TJS': _CurrencyMeta('Tajikistani Somoni', 'ЅМ'),
+  'TMT': _CurrencyMeta('Turkmenistani Manat', 'm'),
+  'TND': _CurrencyMeta('Tunisian Dinar', 'د.ت'),
+  'TOP': _CurrencyMeta('Tongan Paʻanga', r'T$'),
+  'TRY': _CurrencyMeta('Turkish Lira', '₺'),
+  'TTD': _CurrencyMeta('Trinidad and Tobago Dollar', r'$'),
+  'TVD': _CurrencyMeta('Tuvaluan Dollar', r'$'),
+  'TWD': _CurrencyMeta('New Taiwan Dollar', r'NT$'),
+  'TZS': _CurrencyMeta('Tanzanian Shilling', 'TSh'),
+  'UAH': _CurrencyMeta('Ukrainian Hryvnia', '₴'),
+  'UGX': _CurrencyMeta('Ugandan Shilling', 'USh'),
+  'USD': _CurrencyMeta('US Dollar', r'$'),
+  'UYU': _CurrencyMeta('Uruguayan Peso', r'$'),
+  'UZS': _CurrencyMeta('Uzbekistani Soʻm', 'сўм'),
+  'VES': _CurrencyMeta('Venezuelan Bolívar', 'Bs.'),
+  'VND': _CurrencyMeta('Vietnamese Đồng', '₫'),
+  'VUV': _CurrencyMeta('Vanuatu Vatu', 'VT'),
+  'WST': _CurrencyMeta('Samoan Tālā', 'T'),
+  'XAF': _CurrencyMeta('Central African CFA Franc', 'FCFA'),
+  'XCD': _CurrencyMeta('East Caribbean Dollar', r'$'),
+  'XOF': _CurrencyMeta('West African CFA Franc', 'CFA'),
+  'XPF': _CurrencyMeta('CFP Franc', '₣'),
+  'YER': _CurrencyMeta('Yemeni Rial', '﷼'),
+  'ZAR': _CurrencyMeta('South African Rand', 'R'),
+  'ZMW': _CurrencyMeta('Zambian Kwacha', 'ZK'),
+  'ZWL': _CurrencyMeta('Zimbabwean Dollar', r'$'),
+};

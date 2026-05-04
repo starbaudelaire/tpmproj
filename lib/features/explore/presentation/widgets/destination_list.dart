@@ -25,14 +25,26 @@ class DestinationList extends StatelessWidget {
               child: DestinationCardCompact(
                 destination: destination,
                 subtitle: distanceLabels[destination.id] == null
-                    ? '${destination.category} • rating ${destination.rating}'
-                    : '${distanceLabels[destination.id]} • ${destination.category}',
-                onTap: () =>
-                    context.push('${RouteNames.destination}/${destination.id}'),
+                    ? '${_categoryLabel(destination)} • rating ${destination.rating.toStringAsFixed(1)}'
+                    : '${distanceLabels[destination.id]} • ${_categoryLabel(destination)}',
+                onTap: () => context.push('${RouteNames.destination}/${destination.id}'),
               ),
             ),
           )
           .toList(),
     );
+  }
+
+  String _categoryLabel(DestinationModel destination) {
+    final source = '${destination.category} ${destination.type} ${destination.tags.join(' ')}'.toLowerCase();
+    if (source.contains('culture') || source.contains('heritage') || source.contains('budaya')) return 'Budaya';
+    if (source.contains('history') || source.contains('sejarah') || source.contains('museum')) return 'Sejarah';
+    if (source.contains('nature') || source.contains('alam') || source.contains('pantai') || source.contains('goa')) return 'Alam';
+    if (source.contains('culinary') || source.contains('kuliner') || source.contains('food')) return 'Kuliner';
+    if (source.contains('shopping') || source.contains('belanja') || source.contains('gift')) return 'Belanja';
+    if (source.contains('art') || source.contains('seni')) return 'Seni';
+    if (source.contains('activity') || source.contains('aktivitas')) return 'Aktivitas';
+    if (source.contains('photo') || source.contains('foto')) return 'Foto';
+    return destination.category.trim().isEmpty ? 'Wisata' : destination.category;
   }
 }

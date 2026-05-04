@@ -58,32 +58,14 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
             children: [
               Positioned.fill(
                 child: safeImageUrl.isEmpty
-                    ? Container(
-                        color: CupertinoColors.white.withOpacity(0.05),
-                        child: const Center(
-                          child: Icon(
-                            CupertinoIcons.photo,
-                            color: AppColors.textSecondary,
-                            size: 26,
-                          ),
-                        ),
-                      )
+                    ? _DestinationImageFallback(destination: destination)
                     : CachedNetworkImage(
                         imageUrl: safeImageUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
                           color: CupertinoColors.white.withOpacity(0.05),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          color: CupertinoColors.white.withOpacity(0.05),
-                          child: const Center(
-                            child: Icon(
-                              CupertinoIcons.photo,
-                              color: AppColors.textSecondary,
-                              size: 26,
-                            ),
-                          ),
-                        ),
+                        errorWidget: (context, url, error) => _DestinationImageFallback(destination: destination),
                       ),
               ),
               Positioned.fill(
@@ -169,7 +151,7 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
                                     children: [
                                       _MiniPill(
                                         icon: CupertinoIcons.tag_fill,
-                                        label: destination.category,
+                                        label: _categoryLabel(destination.category, destination.type),
                                       ),
                                       const SizedBox(width: 7),
                                       Expanded(
@@ -216,6 +198,116 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
   }
 }
 
+
+class _DestinationImageFallback extends StatelessWidget {
+  const _DestinationImageFallback({required this.destination});
+
+  final DestinationModel destination;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _categoryLabel(destination.category, destination.type);
+    final icon = _iconForCategory(label);
+    final initials = destination.name.trim().isEmpty
+        ? 'JG'
+        : destination.name
+            .trim()
+            .split(RegExp(r'\s+'))
+            .take(2)
+            .map((word) => word.isEmpty ? '' : word[0].toUpperCase())
+            .join();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.accentSecondary.withOpacity(0.32),
+            AppColors.accentPrimary.withOpacity(0.22),
+            AppColors.accentTertiary.withOpacity(0.14),
+            CupertinoColors.black.withOpacity(0.12),
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 38,
+            right: 34,
+            child: Icon(
+              icon,
+              size: 70,
+              color: CupertinoColors.white.withOpacity(0.12),
+            ),
+          ),
+          Positioned(
+            left: 22,
+            top: 48,
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: CupertinoColors.white.withOpacity(0.10),
+                border: Border.all(color: CupertinoColors.white.withOpacity(0.12)),
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: AppTypography.displaySemi22.copyWith(
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.7,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 22,
+            right: 22,
+            top: 128,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.captionSmall11.copyWith(
+                color: AppColors.textPrimary.withOpacity(0.78),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _categoryLabel(String category, String type) {
+  final source = (category.trim().isNotEmpty ? category : type).toLowerCase();
+  if (source.contains('culture') || source.contains('heritage') || source.contains('budaya')) return 'Budaya';
+  if (source.contains('history') || source.contains('sejarah') || source.contains('museum')) return 'Sejarah';
+  if (source.contains('nature') || source.contains('alam') || source.contains('pantai') || source.contains('goa')) return 'Alam';
+  if (source.contains('culinary') || source.contains('kuliner') || source.contains('food')) return 'Kuliner';
+  if (source.contains('shopping') || source.contains('belanja') || source.contains('gift')) return 'Belanja';
+  if (source.contains('art') || source.contains('seni')) return 'Seni';
+  if (source.contains('activity') || source.contains('aktivitas')) return 'Aktivitas';
+  if (source.contains('photo') || source.contains('foto')) return 'Foto';
+  return category.trim().isEmpty ? 'Wisata' : category;
+}
+
+IconData _iconForCategory(String category) {
+  final value = category.toLowerCase();
+  if (value.contains('budaya')) return CupertinoIcons.paintbrush_fill;
+  if (value.contains('sejarah')) return CupertinoIcons.book_fill;
+  if (value.contains('alam')) return CupertinoIcons.leaf_arrow_circlepath;
+  if (value.contains('kuliner')) return CupertinoIcons.flame_fill;
+  if (value.contains('belanja')) return CupertinoIcons.bag_fill;
+  if (value.contains('seni')) return CupertinoIcons.music_note_2;
+  if (value.contains('aktivitas')) return CupertinoIcons.bolt_fill;
+  if (value.contains('foto')) return CupertinoIcons.camera_fill;
+  return CupertinoIcons.map_fill;
+}
+
 class _RatingPill extends StatelessWidget {
   const _RatingPill({required this.label});
 
@@ -232,8 +324,10 @@ class _RatingPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            CupertinoIcons.star_fill,
+          Icon(
+            label.toLowerCase().contains('km') || label.toLowerCase().contains('m')
+                ? CupertinoIcons.location_solid
+                : CupertinoIcons.star_fill,
             size: 12,
             color: AppColors.accentTertiary,
           ),

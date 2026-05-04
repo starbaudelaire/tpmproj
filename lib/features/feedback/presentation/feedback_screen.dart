@@ -215,6 +215,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 }
 
+// ignore: unused_element
 class _FeedbackHeader extends StatelessWidget {
   const _FeedbackHeader();
 

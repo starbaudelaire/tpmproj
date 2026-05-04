@@ -11,17 +11,17 @@ class FilterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const categories = ['Budaya', 'Sejarah', 'Alam', 'Kuliner', 'Belanja', 'Seni', 'Keluarga'];
+    const categories = ['Budaya', 'Sejarah', 'Alam', 'Kuliner', 'Belanja', 'Seni', 'Aktivitas', 'Foto', 'Keluarga'];
     return BottomSheetWrapper(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Pilih kategori wisata', style: AppTypography.displaySemi20),
+          Text('Filter destinasi', style: AppTypography.displaySemi20),
           const SizedBox(height: 6),
           Text(
-            'Biar pencarian lebih cepat dan mudah dipahami semua umur.',
-            style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary),
+            'Pilih suasana jalan-jalan yang kamu mau. Filter ini cocok dengan kategori, tipe, dan tag destinasi di database.',
+            style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.35),
           ),
           const SizedBox(height: 16),
           ...categories.map(
