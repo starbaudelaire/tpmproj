@@ -74,6 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<_ProfileData> _loadProfile() async {
     final user = await getIt<AuthLocalDataSource>().currentUser();
+    final prefs = await SharedPreferences.getInstance();
+    final bio = prefs.getString('profile_bio')?.trim();
 
     final destinations =
         Hive.box<DestinationModel>(AppConstants.destinationsBox)
@@ -95,6 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       destinationCount: destinations.length,
       bestQuizScore: bestQuizScore,
       biometricEnabled: await getIt<AuthLocalDataSource>().isBiometricEnabled(),
+      bio: (bio == null || bio.isEmpty) ? 'Penjelajah Jogja yang suka menemukan cerita baru.' : bio,
     );
   }
 
@@ -114,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(!enabled ? 'Kunci biometrik aktif' : 'Kunci biometrik nonaktif'),
         message: Text(
           !enabled
-              ? 'Aplikasi bisa dibuka dengan biometrik selama session masih valid.'
+              ? 'Kunci cepat aktif untuk perangkat ini.'
               : 'Kunci aplikasi biometrik dimatikan untuk perangkat ini.',
         ),
         cancelButton: CupertinoActionSheetAction(
@@ -133,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context) => CupertinoActionSheet(
             title: const Text('Keluar dari JogjaSplorasi?'),
             message: const Text(
-              'Session lokal akan dihapus dari perangkat ini. Kamu bisa login lagi kapan saja.',
+              'Data masuk di perangkat ini akan dihapus. Kamu bisa masuk lagi kapan saja.',
             ),
             actions: [
               CupertinoActionSheetAction(
@@ -197,11 +200,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     destinationCount: destinations.length,
                     bestQuizScore: baseData.bestQuizScore,
                     biometricEnabled: baseData.biometricEnabled,
+                    bio: baseData.bio,
                   );
 
                   final user = data.user;
                   final name = user?.name ?? 'Penjelajah Jogja';
-                  final email = user?.email ?? 'Local session active';
+                  final email = user?.email ?? 'Belum ada email';
 
                   return ListView(
                     physics: const BouncingScrollPhysics(
@@ -221,6 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _ProfileHero(
                         name: name,
                         email: email,
+                        bio: data.bio,
                         imageBytes: _profileImage,
                         onChangePhoto: _pickImage,
                       ),
@@ -230,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           _ProfileMenuRow(
                             title: 'Edit Profil',
-                            subtitle: 'Ubah nama tampilan dan foto profil',
+                            subtitle: 'Ubah nama, foto, dan bio singkat',
                             icon: CupertinoIcons.pencil_circle_fill,
                             iconColor: AppColors.accentPrimary,
                             onTap: () async {
@@ -258,8 +263,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _ProfileMenuRow(
                             title: 'Kunci Aplikasi Biometrik',
                             subtitle: data.biometricEnabled
-                                ? 'Aktif untuk membuka session lokal'
-                                : 'Aktifkan fingerprint/face unlock perangkat',
+                                ? 'Aktif untuk buka aplikasi lebih cepat'
+                                : 'Aktifkan fingerprint atau face unlock',
                             icon: data.biometricEnabled
                                 ? CupertinoIcons.lock_shield_fill
                                 : CupertinoIcons.lock_shield,
@@ -277,11 +282,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 22),
                       _ProfileSection(
+                        title: 'Coba Fitur HP',
+                        children: [
+                          _ProfileMenuRow(
+                            title: 'Sensor dan Notifikasi',
+                            subtitle: 'Coba gerakan HP dan notifikasi demo',
+                            icon: CupertinoIcons.wrench_fill,
+                            iconColor: AppColors.accentTertiary,
+                            onTap: () => context.push(RouteNames.sensor),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      _ProfileSection(
                         title: 'Akun',
                         children: [
                           _ProfileMenuRow(
                             title: 'Keluar Akun',
-                            subtitle: 'Hapus session lokal dari perangkat',
+                            subtitle: 'Keluar dari perangkat ini',
                             icon: CupertinoIcons.square_arrow_right,
                             iconColor: CupertinoColors.systemRed,
                             destructive: true,
@@ -333,12 +351,14 @@ class _ProfileHero extends StatelessWidget {
   const _ProfileHero({
     required this.name,
     required this.email,
+    required this.bio,
     required this.imageBytes,
     required this.onChangePhoto,
   });
 
   final String name;
   final String email;
+  final String bio;
   final Uint8List? imageBytes;
   final VoidCallback onChangePhoto;
 
@@ -448,7 +468,7 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        email.trim().isEmpty ? 'Local session active' : email,
+                        email.trim().isEmpty ? 'Belum ada email' : email,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.textRegular13.copyWith(
@@ -457,7 +477,16 @@ class _ProfileHero extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 9),
-                      const _InlineBadge(label: 'Hive + SecureStorage'),
+                      Text(
+                        bio.trim().isEmpty ? 'Penjelajah Jogja yang suka menemukan cerita baru.' : bio.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.captionSmall11.copyWith(
+                          color: AppColors.textPrimary.withOpacity(0.76),
+                          height: 1.35,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -691,29 +720,6 @@ class _CircleButtonState extends State<_CircleButton> {
   }
 }
 
-class _InlineBadge extends StatelessWidget {
-  const _InlineBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      blur: 20,
-      opacity: 0.07,
-      borderRadius: 999,
-      borderColor: CupertinoColors.white.withOpacity(0.09),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      child: Text(
-        label,
-        style: AppTypography.captionSmall11.copyWith(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-}
 class _ProfileData {
   const _ProfileData({
     required this.user,
@@ -721,6 +727,7 @@ class _ProfileData {
     required this.destinationCount,
     required this.bestQuizScore,
     required this.biometricEnabled,
+    required this.bio,
   });
 
   final UserModel? user;
@@ -728,6 +735,7 @@ class _ProfileData {
   final int destinationCount;
   final int bestQuizScore;
   final bool biometricEnabled;
+  final String bio;
 
   factory _ProfileData.empty() {
     return const _ProfileData(
@@ -736,6 +744,7 @@ class _ProfileData {
       destinationCount: 0,
       bestQuizScore: 0,
       biometricEnabled: false,
+      bio: 'Penjelajah Jogja yang suka menemukan cerita baru.',
     );
   }
 }

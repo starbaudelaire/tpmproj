@@ -10,6 +10,7 @@ import '../../../core/services/location_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/destination_display_util.dart';
+import '../../../core/utils/destination_image_resolver.dart';
 import '../../../shared/models/destination.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../home/data/weather_remote_datasource.dart';
@@ -279,7 +280,7 @@ class _DetailHero extends StatelessWidget {
           Positioned.fill(
             child: ParallaxHero(
               tag: 'destination-${destination.id}',
-              imageUrl: destination.imageUrl,
+              imageUrl: DestinationImageResolver.resolve(destination),
             ),
           ),
           Positioned.fill(

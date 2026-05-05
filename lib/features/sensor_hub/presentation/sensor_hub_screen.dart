@@ -11,7 +11,9 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/di/injection.dart';
 import '../../../core/router/route_names.dart';
+import '../../notifications/notification_service.dart';
 import '../../../shared/models/destination.dart';
 import '../../../shared/widgets/glass_card.dart';
 import 'widgets/accel_graph.dart';
@@ -117,27 +119,29 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
             children: [
-              JogjaPageHeader(title: 'Sensor Jelajah', subtitle: 'Shake to Discover dan tilt card untuk eksplorasi.'),
+              const JogjaPageHeader(title: 'Coba Fitur HP', subtitle: 'Coba gerakan HP dan notifikasi demo di satu tempat.'),
               const SizedBox(height: 18),
               SensorLiveBanner(
                 live: isLive,
                 accel: accel == null
-                    ? 'Waiting for sensor...'
+                    ? 'Menunggu sensor...'
                     : _axisLabel(accel.x, accel.y, accel.z),
                 gyro: gyro == null
-                    ? 'Waiting for sensor...'
+                    ? 'Menunggu sensor...'
                     : _axisLabel(gyro.x, gyro.y, gyro.z),
               ),
               const SizedBox(height: 14),
               const _ShakeDiscoverPanel(),
+              const SizedBox(height: 14),
+              const _NotificationTestPanel(),
               const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
                     child: SensorFeatureCard(
                       icon: CupertinoIcons.waveform_path_ecg,
-                      label: 'Motion',
-                      value: isLive ? 'Live' : 'Preview',
+                      label: 'Gerak',
+                      value: isLive ? 'Aktif' : 'Coba',
                       color: AppColors.accentTertiary,
                     ),
                   ),
@@ -146,7 +150,7 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
                     child: SensorFeatureCard(
                       icon: CupertinoIcons.scope,
                       label: 'Gyro',
-                      value: gyro == null ? 'Idle' : '3-axis',
+                      value: gyro == null ? 'Siap' : 'Aktif',
                       color: AppColors.accentSecondary,
                     ),
                   ),
@@ -154,8 +158,8 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
                   Expanded(
                     child: SensorFeatureCard(
                       icon: CupertinoIcons.hand_raised_fill,
-                      label: 'Shake',
-                      value: 'Ready',
+                      label: 'Goyang',
+                      value: 'Siap',
                       color: AppColors.accentPrimary,
                     ),
                   ),
@@ -164,7 +168,7 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
               const SizedBox(height: 22),
               const _SectionTitle(
                 title: 'Gyroscope',
-                subtitle: 'Live orientation visualizer',
+                subtitle: 'Pantau miring kiri/kanan HP',
               ),
               const SizedBox(height: 10),
               _LiquidPanel(
@@ -176,7 +180,7 @@ class _SensorHubScreenState extends ConsumerState<SensorHubScreen> {
               const SizedBox(height: 22),
               const _SectionTitle(
                 title: 'Accelerometer',
-                subtitle: 'Motion magnitude graph',
+                subtitle: 'Grafik gerakan HP',
               ),
               const SizedBox(height: 10),
               _LiquidPanel(
@@ -369,6 +373,73 @@ class _WebNotice extends StatelessWidget {
 }
 
 
+class _NotificationTestPanel extends StatelessWidget {
+  const _NotificationTestPanel();
+
+  Future<void> _testNotification() async {
+    await getIt<NotificationService>().showImmediate(
+      'Monggo, ada tempat menarik di dekatmu',
+      'Kanca Jogja punya rekomendasi buat jalan-jalan hari ini.',
+      payload: NotificationPayload.explore,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _LiquidPanel(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(CupertinoIcons.bell_fill, color: AppColors.accentPrimary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Coba Notifikasi',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.displaySemi20.copyWith(color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Kirim contoh notifikasi untuk memastikan fitur berjalan di perangkatmu.',
+                        style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                color: AppColors.accentPrimary.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(999),
+                onPressed: _testNotification,
+                child: Text(
+                  'Kirim Tes',
+                  style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
 class _ShakeDiscoverPanel extends StatefulWidget {
   const _ShakeDiscoverPanel();
 
@@ -393,41 +464,53 @@ class _ShakeDiscoverPanelState extends State<_ShakeDiscoverPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(CupertinoIcons.hand_raised_fill, color: AppColors.accentPrimary),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  'Shake to Discover',
-                  style: AppTypography.displaySemi20.copyWith(color: AppColors.textPrimary),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Goyang untuk Rekomendasi',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.displaySemi20.copyWith(color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Coba goyangkan HP untuk melihat saran tempat menarik.',
+                      style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.35),
+                    ),
+                  ],
                 ),
-              ),
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                color: AppColors.accentPrimary.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(999),
-                onPressed: _pick,
-                child: Text('Coba', style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary)),
               ),
             ],
           ),
-          const SizedBox(height: 9),
-          Text(
-            'Goyangkan HP untuk memberi kejutan destinasi. Tombol Coba dipakai sebagai fallback saat demo web/emulator.',
-            style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.4),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              color: AppColors.accentPrimary.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(999),
+              onPressed: _pick,
+              child: Text('Coba Sekarang', style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary)),
+            ),
           ),
           if (picked != null) ...[
             const SizedBox(height: 14),
             Text(picked.name, style: AppTypography.displaySemi22.copyWith(color: AppColors.textPrimary)),
             const SizedBox(height: 5),
-            Text(picked.description, style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.4)),
+            Text(picked.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.4)),
             const SizedBox(height: 10),
             CupertinoButton(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               color: AppColors.accentPrimary.withOpacity(0.18),
               borderRadius: BorderRadius.circular(999),
               onPressed: () => context.push('${RouteNames.destination}/${picked.id}'),
-              child: const Text('Lihat Detail'),
+              child: const Text('Lihat Tempat'),
             ),
           ],
         ],

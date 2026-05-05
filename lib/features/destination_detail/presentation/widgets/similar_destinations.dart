@@ -26,9 +26,7 @@ class SimilarDestinations extends StatelessWidget {
             child: DestinationCardCompact(
               destination: destination,
               subtitle: DestinationDisplayUtil.categoryFor(destination),
-              onTap: () => context.pushReplacement(
-                '${RouteNames.destination}/${destination.id}',
-              ),
+              onTap: () => context.go('${RouteNames.destination}/${destination.id}'),
             ),
           );
         },

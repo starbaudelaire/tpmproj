@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/destination_display_util.dart';
+import '../../core/utils/destination_image_resolver.dart';
 import '../models/destination.dart';
 import 'glass_card.dart';
 
@@ -24,7 +26,7 @@ class DestinationCardCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeImageUrl = destination.imageUrl.trim();
+    final safeImageUrl = DestinationImageResolver.resolve(destination);
 
     return CupertinoButton(
       padding: EdgeInsets.zero,
@@ -41,15 +43,10 @@ class DestinationCardCompact extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: safeImageUrl.isEmpty
-                  ? _CompactImageFallback(destination: destination)
-                  : CachedNetworkImage(
-                      imageUrl: safeImageUrl,
-                      width: 74,
-                      height: 74,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => _CompactImageFallback(destination: destination),
-                    ),
+              child: _CompactDestinationImage(
+                imageUrl: safeImageUrl,
+                destination: destination,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -101,6 +98,38 @@ class DestinationCardCompact extends StatelessWidget {
   }
 }
 
+
+
+class _CompactDestinationImage extends StatelessWidget {
+  const _CompactDestinationImage({
+    required this.imageUrl,
+    required this.destination,
+  });
+
+  final String imageUrl;
+  final DestinationModel destination;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl.isEmpty) return _CompactImageFallback(destination: destination);
+    if (DestinationImageResolver.isAsset(imageUrl)) {
+      return Image.asset(
+        imageUrl,
+        width: 74,
+        height: 74,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _CompactImageFallback(destination: destination),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: 74,
+      height: 74,
+      fit: BoxFit.cover,
+      errorWidget: (context, url, error) => _CompactImageFallback(destination: destination),
+    );
+  }
+}
 
 class _CompactImageFallback extends StatelessWidget {
   const _CompactImageFallback({required this.destination});
@@ -198,11 +227,11 @@ class _CompactFavoriteButtonState extends State<_CompactFavoriteButton> {
 
 IconData _iconForCategory(String category) {
   final value = category.toLowerCase();
-  if (value.contains('kuliner')) return CupertinoIcons.flame_fill;
+  if (value.contains('kuliner')) return material.Icons.restaurant_rounded;
   if (value.contains('alam')) return CupertinoIcons.leaf_arrow_circlepath;
   if (value.contains('sejarah')) return CupertinoIcons.book_fill;
-  if (value.contains('budaya')) return CupertinoIcons.paintbrush_fill;
-  if (value.contains('seni')) return CupertinoIcons.music_note_2;
+  if (value.contains('budaya')) return CupertinoIcons.book_fill;
+  if (value.contains('seni')) return CupertinoIcons.paintbrush_fill;
   if (value.contains('belanja')) return CupertinoIcons.bag_fill;
   if (value.contains('aktivitas')) return CupertinoIcons.bolt_fill;
   if (value.contains('foto')) return CupertinoIcons.camera_fill;

@@ -98,7 +98,7 @@ class ProfileHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Secure local account • Hive + SecureStorage',
+                  'Penjelajah Jogja',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style:

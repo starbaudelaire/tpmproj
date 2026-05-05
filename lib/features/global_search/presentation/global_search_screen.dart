@@ -26,11 +26,12 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
   static const _bgBottom = Color(0xFF080604);
 
   List<_SearchAction> get _actions => [
-        _SearchAction('Guide AI', 'Tanya pemandu Jogja untuk rekomendasi tempat.', CupertinoIcons.sparkles, RouteNames.guide, ['ai', 'chat', 'pemandu', 'rekomendasi', 'kuliner']),
+        _SearchAction('Kanca Jogja', 'Tanya pemandu Jogja untuk rekomendasi tempat.', CupertinoIcons.sparkles, RouteNames.guide, ['ai', 'chat', 'pemandu', 'rekomendasi', 'kuliner']),
         _SearchAction('Mini Game Budaya', 'Main kuis sejarah dan budaya Yogyakarta.', CupertinoIcons.gamecontroller_fill, RouteNames.game, ['quiz', 'kuis', 'game', 'budaya', 'sejarah']),
-        _SearchAction('Konversi Wisatawan', 'Cek kurs IDR, USD, EUR dan zona waktu.', CupertinoIcons.arrow_2_circlepath, RouteNames.converter, ['kurs', 'mata uang', 'waktu', 'london', 'wib']),
+        _SearchAction('Konversi Kurs', 'Hitung mata uang untuk biaya perjalanan.', CupertinoIcons.money_dollar_circle, '${RouteNames.converter}?tab=currency', ['kurs', 'mata uang', 'currency', 'uang']),
+        _SearchAction('Konversi Waktu', 'Cek zona waktu Indonesia dan dunia.', CupertinoIcons.clock, '${RouteNames.converter}?tab=time', ['waktu', 'zona waktu', 'london', 'wib', 'wita', 'wit']),
         _SearchAction('Sensor Jelajah', 'Shake to Discover dan tilt card destinasi.', CupertinoIcons.waveform_path_ecg, RouteNames.sensor, ['sensor', 'shake', 'gyroscope', 'accelerometer']),
-        _SearchAction('Profil & Tema', 'Edit profil, favorit, kunci biometrik, dan session.', CupertinoIcons.person_crop_circle, RouteNames.profile, ['profil', 'tema', 'dark', 'light', 'biometrik']),
+        _SearchAction('Profil', 'Edit profil, favorit, dan kunci aplikasi.', CupertinoIcons.person_crop_circle, RouteNames.profile, ['profil', 'tema', 'dark', 'light', 'biometrik']),
         _SearchAction('Saran & Kesan TPM', 'Kirim saran dan kesan mata kuliah TPM.', CupertinoIcons.doc_text_fill, RouteNames.feedback, ['saran', 'kesan', 'tpm', 'feedback']),
       ];
 
@@ -77,8 +78,8 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
             physics: const BouncingScrollPhysics(),
             children: [
               const JogjaPageHeader(
-                title: 'Cari Apa Saja',
-                subtitle: 'Temukan destinasi, fitur, setting, dan panduan dalam satu tempat.',
+                title: 'Mau cari apa?',
+                subtitle: 'Temukan tempat wisata, fitur, atau bantuan yang kamu butuhkan.',
               ),
               const SizedBox(height: 18),
               _SearchBox(onChanged: (value) => setState(() => _query = value)),
@@ -120,7 +121,7 @@ class _SearchBox extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: CupertinoTextField.borderless(
         autofocus: true,
-        placeholder: 'Coba ketik candi, tema, quiz, kuliner...',
+        placeholder: 'Coba ketik candi, kuliner, kuis...',
         onChanged: onChanged,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         prefix: Padding(
@@ -161,7 +162,16 @@ class _ActionResultTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: CupertinoButton(
         padding: EdgeInsets.zero,
-        onPressed: () => context.push(action.route),
+        onPressed: () {
+          if (action.route == RouteNames.home ||
+              action.route == RouteNames.explore ||
+              action.route == RouteNames.guide ||
+              action.route == RouteNames.profile) {
+            context.go(action.route);
+          } else {
+            context.push(action.route);
+          }
+        },
         child: GlassCard(
           blur: 28,
           opacity: 0.072,
@@ -242,7 +252,7 @@ class _AskAiCard extends StatelessWidget {
     final prompt = query.trim().isEmpty ? 'Rekomendasikan tempat seru di Jogja hari ini' : 'Ceritakan rekomendasi Jogja tentang $query';
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      onPressed: () => context.push('${RouteNames.guide}?prompt=${Uri.encodeComponent(prompt)}'),
+      onPressed: () => context.go('${RouteNames.guide}?prompt=${Uri.encodeComponent(prompt)}'),
       child: GlassCard(
         blur: 32,
         opacity: 0.09,
@@ -252,7 +262,7 @@ class _AskAiCard extends StatelessWidget {
         child: Row(children: [
           const Icon(CupertinoIcons.sparkles, color: AppColors.accentPrimary),
           const SizedBox(width: 12),
-          Expanded(child: Text('Tanya Guide AI tentang pencarian ini', style: AppTypography.textMedium15.copyWith(color: AppColors.textPrimary))),
+          Expanded(child: Text('Tanya Kanca Jogja tentang pencarian ini', style: AppTypography.textMedium15.copyWith(color: AppColors.textPrimary))),
           const Icon(CupertinoIcons.chevron_right, color: AppColors.textSecondary, size: 16),
         ]),
       ),
@@ -272,7 +282,7 @@ class _EmptySearch extends StatelessWidget {
       borderColor: CupertinoColors.white.withOpacity(0.08),
       padding: const EdgeInsets.all(16),
       child: Text(
-        'Belum ketemu. Coba kata lain seperti budaya, kuliner, candi, tema, atau langsung tanya Guide AI.',
+        'Belum ketemu. Coba kata lain seperti budaya, kuliner, candi, tema, atau langsung tanya Kanca Jogja.',
         style: AppTypography.textRegular13.copyWith(color: AppColors.textSecondary, height: 1.4),
       ),
     );

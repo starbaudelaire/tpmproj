@@ -4,7 +4,9 @@ import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/di/injection.dart';
 import '../../../core/network/api_client.dart';
+import '../../notifications/notification_service.dart';
 import '../../../shared/models/destination.dart';
 
 class FavoritesLocalDataSource {
@@ -60,6 +62,17 @@ class FavoritesLocalDataSource {
     final current = _box.get(id) ?? destination;
     if (current != null) {
       await _box.put(id, current.copyWith(isFavorite: value));
+      if (value) {
+        try {
+          await getIt<NotificationService>().showImmediate(
+            '${current.name} tersimpan di Favorit',
+            'Monggo cek lagi saat kamu siap jalan-jalan.',
+            payload: NotificationPayload.favorites,
+          );
+        } catch (_) {
+          // Notifikasi bersifat tambahan. Favorit tetap harus berjalan.
+        }
+      }
     }
 
     try {

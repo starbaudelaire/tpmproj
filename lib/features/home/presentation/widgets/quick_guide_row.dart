@@ -17,8 +17,8 @@ class QuickGuideRow extends StatelessWidget {
             Expanded(
               child: MetricCard(
                 icon: CupertinoIcons.sparkles,
-                label: 'Guide AI',
-                value: 'Tanya',
+                label: 'Kanca',
+                value: 'Jogja',
                 color: AppColors.accentPrimary,
                 onTap: () => context.go(RouteNames.guide),
               ),
@@ -44,7 +44,7 @@ class QuickGuideRow extends StatelessWidget {
                 label: 'Konversi',
                 value: 'Kurs',
                 color: AppColors.accentPrimary,
-                onTap: () => context.push(RouteNames.converter),
+                onTap: () => context.push('${RouteNames.converter}?tab=currency'),
               ),
             ),
             const SizedBox(width: 12),
@@ -54,7 +54,7 @@ class QuickGuideRow extends StatelessWidget {
                 label: 'Konversi',
                 value: 'Waktu',
                 color: AppColors.accentTertiary,
-                onTap: () => context.push(RouteNames.converter),
+                onTap: () => context.push('${RouteNames.converter}?tab=time'),
               ),
             ),
           ],

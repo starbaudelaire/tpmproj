@@ -109,7 +109,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           setState(() => _saving = false);
           _showMessage(
             title: 'Sesi berakhir',
-            message: 'Silakan masuk kembali agar masukan bisa dikirim ke backend.',
+            message: 'Silakan masuk kembali agar masukanmu bisa disimpan.',
           );
         }
         return;
@@ -129,7 +129,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       await getIt<NotificationService>().showImmediate(
         savedOnline ? 'Masukan terkirim' : 'Masukan tersimpan offline',
         savedOnline
-            ? 'Terima kasih, masukan kamu sudah masuk ke backend.'
+            ? 'Terima kasih, masukan kamu sudah tersimpan.'
             : 'Backend belum dapat dihubungi. Masukan tersimpan lokal.',
       );
     } catch (_) {
@@ -147,7 +147,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
     _showMessage(
       title: 'Tersimpan',
-      message: 'Saran dan kesan berhasil diproses. Jika backend offline, data tersimpan lokal dahulu.',
+      message: 'Saran dan kesan berhasil disimpan. Matur nuwun.',
     );
   }
 
@@ -192,7 +192,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ),
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 126),
           children: [
-            const JogjaPageHeader(title: 'Saran & Kesan TPM', subtitle: 'Masukanmu tersimpan lokal dan siap dikirim ke backend.'),
+            const JogjaPageHeader(title: 'Saran & Kesan TPM', subtitle: 'Tulis pengalamanmu setelah mencoba aplikasi ini.'),
             const SizedBox(height: 18),
             _FeedbackForm(
               rating: _rating,

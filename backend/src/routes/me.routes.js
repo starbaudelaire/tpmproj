@@ -31,7 +31,12 @@ router.patch('/profile', asyncHandler(async (req, res) => {
 }));
 router.patch('/email', asyncHandler(async (req, res) => {
   const body = z.object({ email: z.string().email() }).parse(req.body);
-  const user = await prisma.user.update({ where: { id: req.user.id }, data: { email: body.email.toLowerCase(), emailVerifiedAt: null } });
+  const email = body.email.toLowerCase().trim();
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing && existing.id !== req.user.id) {
+    throw new AppError('Email ini sudah dipakai akun lain.', 409, 'EMAIL_ALREADY_USED');
+  }
+  const user = await prisma.user.update({ where: { id: req.user.id }, data: { email, emailVerifiedAt: null } });
   res.json({ id: user.id, email: user.email });
 }));
 router.patch('/password', asyncHandler(async (req, res) => {

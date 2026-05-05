@@ -71,6 +71,7 @@ class ExploreScreen extends ConsumerWidget {
     final sortByNearest = ref.watch(sortByNearestProvider);
     final activeCategory = ref.watch(activeCategoryProvider);
     final currentPage = ref.watch(explorePageProvider);
+    final resetSignal = ref.watch(exploreResetSignalProvider);
     final location = ref.watch(exploreLocationProvider);
     final results = ref.watch(exploreResultsProvider);
 
@@ -95,6 +96,7 @@ class ExploreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           _SearchField(
+            resetSignal: resetSignal,
             onChanged: (value) {
               ref.read(searchQueryProvider.notifier).state = value;
               _resetPage(ref);
@@ -116,6 +118,9 @@ class ExploreScreen extends ConsumerWidget {
               ref.read(searchQueryProvider.notifier).state = '';
               ref.read(activeCategoryProvider.notifier).state = null;
               ref.read(sortByNearestProvider.notifier).state = true;
+              ref.read(gridModeProvider.notifier).state = true;
+              ref.read(exploreResetSignalProvider.notifier).state++;
+              ref.invalidate(exploreLocationProvider);
               _resetPage(ref);
             },
           ),
@@ -504,10 +509,32 @@ class _LocationMiniBadge extends StatelessWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({required this.onChanged});
+class _SearchField extends StatefulWidget {
+  const _SearchField({required this.onChanged, required this.resetSignal});
 
   final ValueChanged<String> onChanged;
+  final int resetSignal;
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  final _controller = TextEditingController();
+
+  @override
+  void didUpdateWidget(covariant _SearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.resetSignal != widget.resetSignal && _controller.text.isNotEmpty) {
+      _controller.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -518,8 +545,9 @@ class _SearchField extends StatelessWidget {
       borderColor: CupertinoColors.white.withOpacity(0.10),
       padding: EdgeInsets.zero,
       child: CupertinoTextField.borderless(
+        controller: _controller,
         placeholder: 'Cari candi, kuliner, pantai, atau fitur...',
-        onChanged: onChanged,
+        onChanged: widget.onChanged,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         prefix: Padding(
           padding: const EdgeInsets.only(left: 14, right: 8),

@@ -6,6 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
 
+class CurrencyRatesResult {
+  const CurrencyRatesResult({
+    required this.rates,
+    required this.updatedAt,
+    required this.fromFallback,
+  });
+
+  final Map<String, double> rates;
+  final DateTime? updatedAt;
+  final bool fromFallback;
+}
+
 class CurrencyRemoteDataSource {
   CurrencyRemoteDataSource({
     required Dio dio,
@@ -16,15 +28,18 @@ class CurrencyRemoteDataSource {
   final Dio _dio;
   final SharedPreferences _prefs;
 
-  Future<Map<String, double>> fetchRates() async {
+  Future<CurrencyRatesResult> fetchRates({bool forceRefresh = false}) async {
     final cached = _readCachedRates();
     final cachedAt = _prefs.getInt(AppConstants.currencyCacheTimeKey);
+    final updatedAt = cachedAt == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(cachedAt);
     final cacheStillFresh = cachedAt != null &&
         DateTime.now().millisecondsSinceEpoch - cachedAt <
-            const Duration(hours: 1).inMilliseconds;
+            const Duration(minutes: 5).inMilliseconds;
 
-    if (cached != null && cached.length > 10 && cacheStillFresh) {
-      return cached;
+    if (!forceRefresh && cached != null && cached.length > 10 && cacheStillFresh) {
+      return CurrencyRatesResult(rates: cached, updatedAt: updatedAt, fromFallback: false);
     }
 
     try {
@@ -60,10 +75,20 @@ class CurrencyRemoteDataSource {
       );
 
       await _writeCache(sortedRates);
-      return sortedRates;
+      return CurrencyRatesResult(
+        rates: sortedRates,
+        updatedAt: DateTime.now(),
+        fromFallback: false,
+      );
     } catch (_) {
       // Kalau API gagal tapi ada cache lama, tetap pakai cache lama.
-      if (cached != null && cached.isNotEmpty) return cached;
+      if (cached != null && cached.isNotEmpty) {
+        return CurrencyRatesResult(
+          rates: cached,
+          updatedAt: updatedAt,
+          fromFallback: false,
+        );
+      }
 
       // Fallback hanya untuk mode offline pertama kali. Nilai ini bukan sumber utama.
       final fallback = <String, double>{
@@ -83,7 +108,11 @@ class CurrencyRemoteDataSource {
         'USD': 1,
       };
       await _writeCache(fallback);
-      return fallback;
+      return CurrencyRatesResult(
+        rates: fallback,
+        updatedAt: DateTime.now(),
+        fromFallback: true,
+      );
     }
   }
 

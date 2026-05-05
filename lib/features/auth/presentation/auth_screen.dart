@@ -103,8 +103,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             const SizedBox(height: 8),
                             Text(
                               _isLogin
-                                  ? 'Masuk dan lanjutkan cerita jalan-jalanmu di Jogja bersama pemandu wisata digital.'
-                                  : 'Buat akun untuk menyimpan destinasi favorit, kuis budaya, dan rekomendasi personal.',
+                                  ? 'Masuk dan lanjutkan cerita jalan-jalanmu di Jogja.'
+                                  : 'Buat akun agar tempat favorit dan riwayat jelajahmu tetap tersimpan.',
                               textAlign: TextAlign.center,
                               style: AppTypography.textRegular13.copyWith(
                                 color: _muted,
@@ -226,16 +226,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           },
                         ),
                       ],
-                      const SizedBox(height: 18),
-                      Text(
-                        'Session disimpan aman. Biometrik hanya membuka aplikasi di perangkat ini, bukan menyimpan sidik jari.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.labelMedium12.copyWith(
-                          color: _muted.withOpacity(0.72),
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 0,
-                        ),
-                      ),
+                      const SizedBox(height: 6),
                     ],
                   ),
                 ),
@@ -339,10 +330,12 @@ class _BrandMark extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            CupertinoIcons.map_fill,
-            color: _AuthScreenState._text,
-            size: 27,
+          child: Padding(
+            padding: const EdgeInsets.all(9),
+            child: Image.asset(
+              'assets/branding/IkonJS.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         const SizedBox(height: 13),

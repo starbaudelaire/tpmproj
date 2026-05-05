@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../../bootstrap/hive_init.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -86,7 +89,7 @@ class QuizController extends StateNotifier<QuizState> {
     try {
       final session = await _dataSource.start(totalQuestions: 5);
       if (session.questions.isEmpty) {
-        state = const QuizState(errorMessage: 'Soal kuis belum tersedia. Jalankan seed database backend terlebih dahulu.');
+        state = const QuizState(errorMessage: 'Soal kuis belum tersedia. Coba jalankan ulang data kuis terlebih dahulu.');
         return;
       }
 
@@ -98,7 +101,7 @@ class QuizController extends StateNotifier<QuizState> {
       );
       _startTimer();
     } catch (_) {
-      state = const QuizState(errorMessage: 'Kuis belum bisa dimulai. Periksa koneksi, login, dan backend.');
+      state = const QuizState(errorMessage: 'Kuis belum bisa dimulai. Coba cek koneksi dan masuk ulang.');
     }
   }
 
@@ -443,7 +446,7 @@ class _QuizLobbyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Jawab 5 pertanyaan acak dari bank soal backend. Skor dihitung dari ketepatan dan kecepatan menjawab.',
+              'Jawab 5 pertanyaan acak. Skor dihitung dari ketepatan dan kecepatanmu menjawab.',
               textAlign: TextAlign.center,
               style: AppTypography.textRegular13.copyWith(
                 color: AppColors.textSecondary,
@@ -456,8 +459,166 @@ class _QuizLobbyView extends StatelessWidget {
               label: 'Mulai Kuis',
               onTap: onStart,
             ),
+            const SizedBox(height: 18),
+            const _QuizHistoryPreview(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+class _QuizHistoryPreview extends StatelessWidget {
+  const _QuizHistoryPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final box = Hive.box<QuizScoreModel>(AppConstants.quizScoresBox);
+
+    return ValueListenableBuilder<Box<QuizScoreModel>>(
+      valueListenable: box.listenable(),
+      builder: (context, value, _) {
+        final scores = value.values.toList()
+          ..sort((a, b) => b.playedAt.compareTo(a.playedAt));
+        final latest = scores.take(5).toList();
+        final bestScore = scores.fold<int>(0, (best, item) => item.score > best ? item.score : best);
+
+        return GlassCard(
+          blur: 24,
+          opacity: 0.055,
+          borderRadius: 24,
+          borderColor: CupertinoColors.white.withOpacity(0.09),
+          padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accentTertiary.withOpacity(0.13),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.chart_bar_alt_fill,
+                      size: 17,
+                      color: AppColors.accentTertiary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Riwayat Skor',
+                          style: AppTypography.textMedium15.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          scores.isEmpty
+                              ? 'Belum ada skor. Mainkan kuis pertama, monggo.'
+                              : 'Skor terbaik $bestScore poin dari ${scores.length} percobaan.',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.captionSmall11.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.35,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (latest.isNotEmpty) ...[
+                const SizedBox(height: 13),
+                ...List.generate(latest.length, (index) {
+                  final item = latest[index];
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: index == latest.length - 1 ? 0 : 9),
+                    child: _QuizHistoryRow(score: item),
+                  );
+                }),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _QuizHistoryRow extends StatelessWidget {
+  const _QuizHistoryRow({required this.score});
+
+  final QuizScoreModel score;
+
+  String _dateLabel(DateTime value) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    final day = value.day.toString().padLeft(2, '0');
+    final month = months[value.month - 1];
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$day $month $hour:$minute';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accuracy = score.total == 0 ? 0 : ((score.correct / score.total) * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: CupertinoColors.white.withOpacity(0.035),
+        border: Border.all(color: CupertinoColors.white.withOpacity(0.07)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _dateLabel(score.playedAt),
+                  style: AppTypography.captionSmall11.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${score.correct}/${score.total} benar • Akurasi $accuracy%',
+                  style: AppTypography.textRegular13.copyWith(
+                    color: AppColors.textPrimary,
+                    height: 1.25,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '${score.score}',
+            style: AppTypography.displaySemi22.copyWith(
+              color: AppColors.accentSecondary,
+              letterSpacing: -0.55,
+            ),
+          ),
+        ],
       ),
     );
   }

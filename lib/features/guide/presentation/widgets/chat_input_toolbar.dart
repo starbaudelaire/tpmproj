@@ -21,7 +21,7 @@ class ChatInputToolbar extends StatelessWidget {
           Expanded(
             child: CupertinoTextField.borderless(
               controller: controller,
-              placeholder: 'Ask Guide AI...',
+              placeholder: 'Tulis pertanyaanmu di sini, monggo...',
             ),
           ),
           CupertinoButton(

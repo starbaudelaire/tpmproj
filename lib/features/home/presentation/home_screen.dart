@@ -1,11 +1,8 @@
-import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shake/shake.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/router/route_names.dart';
@@ -30,7 +27,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  ShakeDetector? _detector;
   late final Future<String> _usernameFuture;
 
   static const _bgTop = Color(0xFF181821);
@@ -43,46 +39,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _usernameFuture = _loadUsername();
-
-    if (kIsWeb) return;
-
-    _detector = ShakeDetector.autoStart(
-      shakeThresholdGravity: 15,
-      onPhoneShake: (_) async {
-        final featured = await ref.read(featuredDestinationsProvider.future);
-        if (!mounted || featured.isEmpty) return;
-
-        HapticFeedback.mediumImpact();
-
-        final random = featured[Random().nextInt(featured.length)];
-        if (!mounted) return;
-
-        showCupertinoModalPopup<void>(
-          context: context,
-          builder: (context) => BottomSheetWrapper(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Shake to Discover!',
-                  style: AppTypography.labelMedium12.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(random.name, style: AppTypography.displaySemi22),
-                const SizedBox(height: 6),
-                Text(
-                  random.description,
-                  style: AppTypography.textRegular13.copyWith(height: 1.45),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   Future<String> _loadUsername() async {
@@ -95,7 +51,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _detector?.stopListening();
     super.dispose();
   }
 
@@ -162,15 +117,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 24),
                     const _SectionHeader(
-                      title: 'Menu Utama',
-                      subtitle: 'Akses cepat fitur unggulan JogjaSplorasi.',
+                      title: 'Akses Cepat',
+                      subtitle: 'Pilih yang kamu butuhkan hari ini.',
                     ),
                     const SizedBox(height: 12),
                     const QuickGuideRow(),
                     const SizedBox(height: 28),
                     const _SectionHeader(
-                      title: 'Destinasi Unggulan',
-                      subtitle: 'Pilihan tempat terbaik dari kurasi JogjaSplorasi.',
+                      title: 'Destinasi Pilihan',
+                      subtitle: 'Tempat menarik yang bisa kamu coba.',
                     ),
                     const SizedBox(height: 12),
                     featured.when(
@@ -182,8 +137,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 30),
                     _SectionHeader(
-                      title: 'Terdekat dari Lokasimu',
-                      subtitle: 'Rekomendasi yang paling mudah kamu datangi.',
+                      title: 'Di Sekitarmu',
+                      subtitle: 'Tempat menarik yang dekat dari posisimu.',
                       actionLabel: 'Jelajahi',
                       onActionTap: () => context.go(RouteNames.explore),
                     ),

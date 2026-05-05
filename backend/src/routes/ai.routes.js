@@ -116,20 +116,24 @@ router.post('/guide/chat', auth, asyncHandler(async (req, res) => {
     ],
   });
 
+  const noteByProvider = {
+    'gemini-web-grounded': 'Jawaban memakai Google Gemini dengan web grounding untuk informasi terkini, serta tetap membawa konteks JogjaSplorasi.',
+    'gemini-context-grounded': 'Jawaban memakai Google Gemini dengan konteks database JogjaSplorasi tanpa web search agar lebih hemat kuota.',
+    'groq-context-grounded': 'Jawaban memakai Groq sebagai AI utama yang hemat dan cepat, dengan konteks database JogjaSplorasi.',
+    'openrouter-context-grounded': 'Jawaban memakai OpenRouter sebagai cadangan, dengan konteks database JogjaSplorasi.',
+    'database-grounded-local': 'Jawaban memakai fallback lokal dan dibatasi pada data destinasi aktif/terverifikasi.',
+  };
+
   res.json({
     conversationId: conversation.id,
     answer: reply.answer,
     confidence: reply.confidence,
     citedDestinations,
     guardrails: {
-      groundedInDatabase: true,
+      groundedInDatabase: reply.provider !== 'gemini-web-grounded',
       mode: reply.provider,
       fallbackReason: reply.fallbackReason,
-      note: reply.provider === 'gemini-database-grounded'
-        ? 'Jawaban memakai Google Gemini dan dibatasi oleh konteks destinasi database JogjaSplorasi.'
-        : reply.provider === 'openrouter-database-grounded'
-          ? 'Jawaban memakai OpenRouter dan dibatasi oleh konteks destinasi database JogjaSplorasi.'
-          : 'Jawaban memakai fallback lokal dan dibatasi pada data destinasi aktif/terverifikasi.',
+      note: noteByProvider[reply.provider] || 'Jawaban memakai AI Guide JogjaSplorasi dengan fallback aman.',
     },
   });
 }));

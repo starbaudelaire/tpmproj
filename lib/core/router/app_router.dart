@@ -18,6 +18,7 @@ import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/sensor_hub/presentation/sensor_hub_screen.dart';
 import '../../features/tpm_about/presentation/tpm_about_screen.dart';
 import '../../shared/widgets/floating_tab_bar.dart';
+import '../../shared/widgets/global_sensor_layer.dart';
 import '../di/injection.dart';
 import 'route_names.dart';
 
@@ -60,8 +61,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: RouteNames.home,
-                  pageBuilder: (context, state) =>
-                      const CupertinoPage(child: HomeScreen()),
+                  pageBuilder: (context, state) => _softPage(const HomeScreen()),
                 ),
               ],
             ),
@@ -70,8 +70,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: RouteNames.explore,
-                  pageBuilder: (context, state) =>
-                      const CupertinoPage(child: ExploreScreen()),
+                  pageBuilder: (context, state) => _softPage(const ExploreScreen()),
                 ),
               ],
             ),
@@ -80,8 +79,8 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: RouteNames.guide,
-                  pageBuilder: (context, state) => CupertinoPage(
-                    child: GuideScreen(
+                  pageBuilder: (context, state) => _softPage(
+                    GuideScreen(
                       initialPrompt: state.uri.queryParameters['prompt'],
                     ),
                   ),
@@ -93,8 +92,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: RouteNames.profile,
-                  pageBuilder: (context, state) =>
-                      const CupertinoPage(child: ProfileScreen()),
+                  pageBuilder: (context, state) => _softPage(const ProfileScreen()),
                 ),
               ],
             ),
@@ -103,55 +101,82 @@ class AppRouter {
         GoRoute(
           path: RouteNames.globalSearch,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: GlobalSearchScreen()),
+              _softPage(const GlobalSearchScreen()),
         ),
 
         GoRoute(
           path: RouteNames.editProfile,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: EditProfileScreen()),
+              _softPage(const EditProfileScreen()),
         ),
         GoRoute(
           path: RouteNames.feedback,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: FeedbackScreen()),
+              _softPage(const FeedbackScreen()),
         ),
         GoRoute(
           path: RouteNames.tpmAbout,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: TpmAboutScreen()),
+              _softPage(const TpmAboutScreen()),
         ),
         GoRoute(
           path: RouteNames.sensor,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: SensorHubScreen()),
+              _softPage(const SensorHubScreen()),
         ),
         GoRoute(
           path: '${RouteNames.destination}/:id',
-          pageBuilder: (context, state) => CupertinoPage(
-            child: DestinationDetailScreen(
+          pageBuilder: (context, state) => _softPage(
+            DestinationDetailScreen(
               destinationId: state.pathParameters['id']!,
             ),
           ),
         ),
         GoRoute(
           path: RouteNames.converter,
-          pageBuilder: (context, state) =>
-              const CupertinoPage(child: ConverterScreen()),
+          pageBuilder: (context, state) => _softPage(
+            ConverterScreen(
+              initialMode: state.uri.queryParameters['tab'] == 'time'
+                  ? 'time'
+                  : 'currency',
+            ),
+          ),
         ),
         GoRoute(
           path: RouteNames.game,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: MiniGameScreen()),
+              _softPage(const MiniGameScreen()),
         ),
         GoRoute(
           path: RouteNames.favorites,
           pageBuilder: (context, state) =>
-              const CupertinoPage(child: FavoritesScreen()),
+              _softPage(const FavoritesScreen()),
         ),
       ],
     );
   }
+}
+
+
+CustomTransitionPage<void> _softPage(Widget child) {
+  return CustomTransitionPage<void>(
+    child: child,
+    transitionDuration: const Duration(milliseconds: 240),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
 }
 
 class _MainShell extends StatelessWidget {
@@ -162,7 +187,8 @@ class _MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      child: Stack(
+      child: GlobalSensorLayer(
+        child: Stack(
         children: [
           Positioned.fill(child: navigationShell),
           FloatingTabBar(
@@ -181,6 +207,7 @@ class _MainShell extends StatelessWidget {
             },
           ),
         ],
+        ),
       ),
     );
   }

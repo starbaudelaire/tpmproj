@@ -10,6 +10,7 @@ import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/models/user.dart';
+import '../../../core/network/api_client.dart';
 import '../../../shared/widgets/glass_card.dart';
 import '../../auth/data/auth_local_datasource.dart';
 
@@ -23,6 +24,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _bioController = TextEditingController();
   UserModel? _user;
   Uint8List? _imageBytes;
   bool _loading = true;
@@ -42,6 +44,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -49,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = await getIt<AuthLocalDataSource>().currentUser();
     final prefs = await SharedPreferences.getInstance();
     final imageBase64 = prefs.getString('profile_image');
+    final bio = prefs.getString('profile_bio') ?? 'Penjelajah Jogja yang suka menemukan cerita baru.';
 
     Uint8List? image;
     if (imageBase64 != null && imageBase64.isNotEmpty) {
@@ -60,6 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _user = user;
       _nameController.text = user?.name ?? '';
       _emailController.text = user?.email ?? '';
+      _bioController.text = bio;
       _imageBytes = image;
       _loading = false;
     });
@@ -85,23 +90,50 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (current == null) return;
 
     final name = _nameController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final bio = _bioController.text.trim();
     if (name.length < 2) {
       _showMessage('Nama minimal 2 karakter.');
       return;
     }
+    final emailOk = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    if (!emailOk) {
+      _showMessage('Email belum sesuai. Coba cek lagi, ya.');
+      return;
+    }
 
     setState(() => _saving = true);
+
+    try {
+      final api = getIt<ApiClient>();
+      await api.dio.patch('/me/profile', data: {
+        'fullName': name,
+        'bio': bio.isEmpty ? null : bio,
+      });
+      if (email != current.email.toLowerCase()) {
+        await api.dio.patch('/me/email', data: {'email': email});
+      }
+    } catch (_) {
+      // Tetap simpan lokal supaya perubahan profil tidak hilang saat backend sedang tidak aktif.
+    }
+
     final updated = UserModel(
       id: current.id,
       name: name,
-      email: current.email,
+      email: email,
       joinedAt: current.joinedAt,
       quizBestScore: current.quizBestScore,
       visitedCount: current.visitedCount,
     );
 
-    await Hive.box<UserModel>(AppConstants.usersBox).put(updated.email, updated);
+    final usersBox = Hive.box<UserModel>(AppConstants.usersBox);
+    if (current.email.toLowerCase() != email) {
+      await usersBox.delete(current.email);
+    }
+    await usersBox.put(updated.email, updated);
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConstants.currentUserKey, updated.email);
+    await prefs.setString('profile_bio', bio.isEmpty ? 'Penjelajah Jogja yang suka menemukan cerita baru.' : bio);
     if (_imageBytes == null) {
       await prefs.remove('profile_image');
     } else {
@@ -226,22 +258,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       label: 'Email akun',
                       controller: _emailController,
                       placeholder: 'email@example.com',
-                      enabled: false,
+                      enabled: true,
                     ),
                     const SizedBox(height: 12),
-                    GlassCard(
-                      blur: 24,
-                      opacity: 0.066,
-                      borderRadius: 20,
-                      borderColor: CupertinoColors.white.withOpacity(0.09),
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                      child: Text(
-                        'Email dibuat read-only supaya tidak memutus key session lokal. Untuk produksi, perubahan email sebaiknya lewat endpoint backend dengan verifikasi password/OTP.',
-                        style: AppTypography.captionSmall11.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.35,
-                        ),
-                      ),
+                    _FieldCard(
+                      label: 'Bio singkat',
+                      controller: _bioController,
+                      placeholder: 'Ceritakan sedikit tentang gaya jelajahmu',
+                      enabled: true,
+                      minLines: 2,
+                      maxLines: 3,
                     ),
                     const SizedBox(height: 22),
                     CupertinoButton(
@@ -272,12 +298,16 @@ class _FieldCard extends StatelessWidget {
     required this.controller,
     required this.placeholder,
     required this.enabled,
+    this.minLines = 1,
+    this.maxLines = 1,
   });
 
   final String label;
   final TextEditingController controller;
   final String placeholder;
   final bool enabled;
+  final int minLines;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -302,6 +332,8 @@ class _FieldCard extends StatelessWidget {
             controller: controller,
             enabled: enabled,
             placeholder: placeholder,
+            minLines: minLines,
+            maxLines: maxLines,
             style: AppTypography.textMedium15.copyWith(
               color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
             ),

@@ -130,7 +130,7 @@ class _TimeConverterViewState extends State<TimeConverterView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'World Time Converter',
+                  'Konversi Waktu',
                   style: AppTypography.displaySemi22.copyWith(
                     color: AppColors.textPrimary,
                     letterSpacing: -0.55,
@@ -138,7 +138,7 @@ class _TimeConverterViewState extends State<TimeConverterView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Pilih negara/kota mana pun dari daftar zona waktu dunia, termasuk WIB, WITA, WIT, dan London.',
+                  'Pilih waktu, kota asal, lalu lihat hasilnya di zona tujuan.',
                   style: AppTypography.textRegular13.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w400,
@@ -146,6 +146,22 @@ class _TimeConverterViewState extends State<TimeConverterView> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Waktu yang ingin dikonversi',
+                  style: AppTypography.textMedium15.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _DateTimeButton(
+                  label: _isUsingNow
+                      ? 'Sekarang • ${DateUtil.hourMinute(_baseLocalTime)}'
+                      : '${_baseLocalTime.day.toString().padLeft(2, '0')}/${_baseLocalTime.month.toString().padLeft(2, '0')}/${_baseLocalTime.year} • ${DateUtil.hourMinute(_baseLocalTime)}',
+                  onPick: _pickDateTime,
+                  onUseNow: () => setState(() => _baseLocalTime = DateTime.now()),
+                ),
+                const SizedBox(height: 14),
                 _ZoneSelectRow(
                   label: 'Dari',
                   zone: _fromZone,
@@ -159,14 +175,7 @@ class _TimeConverterViewState extends State<TimeConverterView> {
                   offset: _offsetLabel(_toZone),
                   onTap: () => _pickZone(isFrom: false),
                 ),
-                const SizedBox(height: 12),
-                _DateTimeButton(
-                  label: _isUsingNow
-                      ? 'Waktu sekarang'
-                      : '${_baseLocalTime.day.toString().padLeft(2, '0')}/${_baseLocalTime.month.toString().padLeft(2, '0')}/${_baseLocalTime.year} ${DateUtil.hourMinute(_baseLocalTime)}',
-                  onPick: _pickDateTime,
-                  onUseNow: () => setState(() => _baseLocalTime = DateTime.now()),
-                ),
+
                 const SizedBox(height: 16),
                 _MainTimeCard(
                   title: '${_fromZone.city} → ${_toZone.city}',
@@ -180,7 +189,7 @@ class _TimeConverterViewState extends State<TimeConverterView> {
         ),
         const SizedBox(height: 14),
         Text(
-          'Zona wajib TPM',
+          'Zona Waktu Indonesia',
           style: AppTypography.textMedium15.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w500,
@@ -296,10 +305,10 @@ class _DateTimeButton extends StatelessWidget {
               opacity: 0.072,
               borderRadius: 20,
               borderColor: CupertinoColors.white.withOpacity(0.09),
-              padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
+              padding: const EdgeInsets.fromLTRB(15, 16, 15, 16),
               child: Row(
                 children: [
-                  const Icon(CupertinoIcons.calendar, size: 16, color: AppColors.accentPrimary),
+                  const Icon(CupertinoIcons.clock, size: 18, color: AppColors.accentPrimary),
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
@@ -326,7 +335,7 @@ class _DateTimeButton extends StatelessWidget {
             borderColor: CupertinoColors.white.withOpacity(0.09),
             padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
             child: Text(
-              'Now',
+              'Sekarang',
               style: AppTypography.captionSmall11.copyWith(color: AppColors.textPrimary),
             ),
           ),

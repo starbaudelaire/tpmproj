@@ -9,10 +9,16 @@ import '../../../../shared/widgets/glass_card.dart';
 class CurrencyConverterView extends ConsumerStatefulWidget {
   const CurrencyConverterView({
     required this.rates,
+    required this.updatedAt,
+    required this.fromFallback,
+    required this.onRefresh,
     super.key,
   });
 
   final Map<String, double> rates;
+  final DateTime? updatedAt;
+  final bool fromFallback;
+  final VoidCallback onRefresh;
 
   @override
   ConsumerState<CurrencyConverterView> createState() =>
@@ -97,6 +103,14 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
 
   String _name(String code) => _currencyMeta[code]?.name ?? code;
 
+  String _updateLabel(DateTime? updatedAt, bool fallback, String rateText) {
+    final time = updatedAt == null
+        ? 'belum diketahui'
+        : '${updatedAt.hour.toString().padLeft(2, '0')}:${updatedAt.minute.toString().padLeft(2, '0')}';
+    final source = fallback ? 'mode offline' : 'data terbaru';
+    return '$rateText\nDiperbarui $time • $source';
+  }
+
   String _format(double value) {
     if (value >= 1000000) return value.toStringAsFixed(0);
     if (value >= 1000) return value.toStringAsFixed(2);
@@ -136,7 +150,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Currency Exchange',
+                  'Konversi Kurs',
                   style: AppTypography.displaySemi22.copyWith(
                     color: AppColors.textPrimary,
                     letterSpacing: -0.55,
@@ -144,7 +158,7 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Pilih mata uang mancanegara secara fleksibel dari data exchange rate terbaru.',
+                  'Hitung kurs dari data terbaru. Kamu juga bisa refresh sebelum menghitung biaya perjalanan.',
                   style: AppTypography.textRegular13.copyWith(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w400,
@@ -191,7 +205,35 @@ class _CurrencyConverterViewState extends ConsumerState<CurrencyConverterView> {
           ),
         ),
         const SizedBox(height: 14),
-        _RateHint(text: rateText),
+        Row(
+          children: [
+            Expanded(
+              child: _RateHint(
+                text: _updateLabel(widget.updatedAt, widget.fromFallback, rateText),
+              ),
+            ),
+            const SizedBox(width: 10),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: 0,
+              onPressed: widget.onRefresh,
+              child: GlassCard(
+                blur: 20,
+                opacity: 0.07,
+                borderRadius: 18,
+                borderColor: CupertinoColors.white.withOpacity(0.10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Text(
+                  'Refresh',
+                  style: AppTypography.captionSmall11.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -220,7 +262,7 @@ class _AmountInput extends StatelessWidget {
         onChanged: onChanged,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 17),
-        placeholder: 'Amount',
+        placeholder: 'Jumlah',
         placeholderStyle: AppTypography.textRegular13.copyWith(
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w400,

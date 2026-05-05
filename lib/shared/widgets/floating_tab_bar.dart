@@ -37,7 +37,7 @@ class FloatingTabBar extends StatelessWidget {
         activeIcon: CupertinoIcons.map_fill,
       ),
       _TabItem(
-        label: 'Guide AI',
+        label: 'Kanca',
         icon: CupertinoIcons.sparkles,
         activeIcon: CupertinoIcons.sparkles,
       ),

@@ -87,7 +87,7 @@ class QuizRemoteDataSource {
         final optionMap = option as Map<String, dynamic>;
         return QuizOption(
           id: optionMap['id'] as String,
-          text: optionMap['optionText'] as String,
+          text: _readableOptionText(optionMap['optionText'] as String),
         );
       }).toList();
       return QuizQuestion(
@@ -142,4 +142,11 @@ class QuizRemoteDataSource {
       ),
     );
   }
+}
+
+
+String _readableOptionText(String value) {
+  final text = value.trim();
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
 }

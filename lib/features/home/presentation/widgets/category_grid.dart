@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,13 +16,13 @@ class CategoryGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const items = [
-      CategoryModel(label: 'Budaya', icon: CupertinoIcons.paintbrush_fill, color: AppColors.accentSecondary),
+      CategoryModel(label: 'Budaya', icon: CupertinoIcons.book_fill, color: AppColors.accentSecondary),
       CategoryModel(label: 'Alam', icon: CupertinoIcons.leaf_arrow_circlepath, color: AppColors.accentTertiary),
-      CategoryModel(label: 'Kuliner', icon: CupertinoIcons.flame_fill, color: AppColors.accentPrimary),
+      CategoryModel(label: 'Kuliner', icon: material.Icons.restaurant_rounded, color: AppColors.accentPrimary),
       CategoryModel(label: 'Belanja', icon: CupertinoIcons.bag_fill, color: AppColors.textSecondary),
-      CategoryModel(label: 'Seni', icon: CupertinoIcons.music_note_2, color: AppColors.textSecondary),
+      CategoryModel(label: 'Seni', icon: CupertinoIcons.paintbrush_fill, color: AppColors.textSecondary),
       CategoryModel(label: 'Aktivitas', icon: CupertinoIcons.bolt_fill, color: AppColors.textSecondary),
-      CategoryModel(label: 'Sejarah', icon: CupertinoIcons.book_fill, color: AppColors.accentSecondary),
+      CategoryModel(label: 'Sejarah', icon: CupertinoIcons.map_fill, color: AppColors.accentSecondary),
       CategoryModel(label: 'Foto', icon: CupertinoIcons.camera_fill, color: AppColors.accentTertiary),
     ];
 

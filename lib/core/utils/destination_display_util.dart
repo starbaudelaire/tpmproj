@@ -143,6 +143,16 @@ abstract final class DestinationDisplayUtil {
     );
   }
 
+  static String compactPrice(String value) {
+    final cleaned = value.trim();
+    if (cleaned.isEmpty || cleaned == '-') return 'Cek berkala';
+    final lower = cleaned.toLowerCase();
+    if (lower.contains('perlu verifikasi')) return 'Perlu verifikasi';
+    if (lower.contains('gratis')) return 'Gratis';
+    if (cleaned.length > 36) return cleaned.replaceAll('Mulai sekitar ', 'Mulai ');
+    return cleaned;
+  }
+
   static String compactOpenHours(String value) {
     final cleaned = value.trim();
     if (cleaned.isEmpty || cleaned == '-') return 'Jam belum tersedia';

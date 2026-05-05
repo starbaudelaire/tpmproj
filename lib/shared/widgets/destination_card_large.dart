@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/destination_display_util.dart';
+import '../../core/utils/destination_image_resolver.dart';
 import '../models/destination.dart';
 import 'glass_card.dart';
 
@@ -38,7 +40,7 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
   @override
   Widget build(BuildContext context) {
     final destination = widget.destination;
-    final safeImageUrl = destination.imageUrl.trim();
+    final safeImageUrl = DestinationImageResolver.resolve(destination);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -58,16 +60,10 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
           child: Stack(
             children: [
               Positioned.fill(
-                child: safeImageUrl.isEmpty
-                    ? _DestinationImageFallback(destination: destination)
-                    : CachedNetworkImage(
-                        imageUrl: safeImageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: CupertinoColors.white.withOpacity(0.05),
-                        ),
-                        errorWidget: (context, url, error) => _DestinationImageFallback(destination: destination),
-                      ),
+                child: _DestinationCoverImage(
+                  imageUrl: safeImageUrl,
+                  destination: destination,
+                ),
               ),
               Positioned.fill(
                 child: DecoratedBox(
@@ -200,6 +196,37 @@ class _DestinationCardLargeState extends State<DestinationCardLarge> {
 }
 
 
+
+class _DestinationCoverImage extends StatelessWidget {
+  const _DestinationCoverImage({
+    required this.imageUrl,
+    required this.destination,
+  });
+
+  final String imageUrl;
+  final DestinationModel destination;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl.isEmpty) return _DestinationImageFallback(destination: destination);
+    if (DestinationImageResolver.isAsset(imageUrl)) {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _DestinationImageFallback(destination: destination),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(
+        color: CupertinoColors.white.withOpacity(0.05),
+      ),
+      errorWidget: (context, url, error) => _DestinationImageFallback(destination: destination),
+    );
+  }
+}
+
 class _DestinationImageFallback extends StatelessWidget {
   const _DestinationImageFallback({required this.destination});
 
@@ -285,12 +312,12 @@ class _DestinationImageFallback extends StatelessWidget {
 
 IconData _iconForCategory(String category) {
   final value = category.toLowerCase();
-  if (value.contains('budaya')) return CupertinoIcons.paintbrush_fill;
+  if (value.contains('budaya')) return CupertinoIcons.book_fill;
   if (value.contains('sejarah')) return CupertinoIcons.book_fill;
   if (value.contains('alam')) return CupertinoIcons.leaf_arrow_circlepath;
-  if (value.contains('kuliner')) return CupertinoIcons.flame_fill;
+  if (value.contains('kuliner')) return material.Icons.restaurant_rounded;
   if (value.contains('belanja')) return CupertinoIcons.bag_fill;
-  if (value.contains('seni')) return CupertinoIcons.music_note_2;
+  if (value.contains('seni')) return CupertinoIcons.paintbrush_fill;
   if (value.contains('aktivitas')) return CupertinoIcons.bolt_fill;
   if (value.contains('foto')) return CupertinoIcons.camera_fill;
   return CupertinoIcons.map_fill;

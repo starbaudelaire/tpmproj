@@ -35,10 +35,10 @@ class _AIGuideTeaserState extends State<AIGuideTeaser> {
       onTapUp: (_) {
         _setPressed(false);
         HapticFeedback.selectionClick();
-        context.push(
-          RouteNames.guide,
-          extra: widget.destinationName,
+        final prompt = Uri.encodeQueryComponent(
+          'Ceritakan tentang ${widget.destinationName} dan buatkan itinerary singkat.',
         );
+        context.go('${RouteNames.guide}?prompt=$prompt');
       },
       child: AnimatedScale(
         scale: _pressed ? 0.975 : 1,
@@ -85,7 +85,7 @@ class _AIGuideTeaserState extends State<AIGuideTeaser> {
                 const SizedBox(width: 13),
                 Expanded(
                   child: Text(
-                    'Tanya Guide AI untuk itinerary, sejarah, dan hidden gems',
+                    'Tanya Kanca Jogja tentang tempat ini',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.textRegular13.copyWith(

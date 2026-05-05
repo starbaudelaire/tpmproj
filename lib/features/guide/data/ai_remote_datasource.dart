@@ -29,7 +29,7 @@ class AiRemoteDataSource {
 
       final answer = data['answer'] as String?;
       if (answer == null || answer.trim().isEmpty) {
-        yield 'Guide AI belum mengembalikan jawaban dari backend.';
+        yield 'Kanca Jogja belum sempat menjawab. Coba tanyakan lagi, nggih.';
         return;
       }
 
@@ -58,17 +58,17 @@ class AiRemoteDataSource {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
       if (statusCode == 401) {
-        return 'Silakan login ulang agar Guide AI bisa membaca preferensi akun Anda.';
+        return 'Silakan login ulang agar Kanca Jogja bisa membaca preferensi akun Anda.';
       }
       if (statusCode == 404) {
-        return 'Endpoint Guide AI belum tersedia. Pastikan backend Phase 8 sudah dijalankan.';
+        return 'Kanca Jogja belum siap menjawab. Coba nyalakan layanan aplikasi dulu.';
       }
       if (statusCode != null) {
-        return 'Guide AI belum bisa dihubungi. Backend merespons HTTP $statusCode.';
+        return 'Kanca Jogja belum bisa dihubungi. Backend merespons HTTP $statusCode.';
       }
-      return 'Guide AI belum bisa terhubung ke backend. Pastikan server berjalan dan BACKEND_BASE_URL benar.';
+      return 'Kanca Jogja belum bisa tersambung. Coba cek koneksi dan layanan aplikasi.';
     }
 
-    return 'Guide AI sedang tidak tersedia. Coba lagi setelah backend aktif.';
+    return 'Kanca Jogja sedang belum siap. Coba lagi sebentar, nggih.';
   }
 }

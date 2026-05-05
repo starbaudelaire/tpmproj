@@ -6,7 +6,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass_card.dart';
 import 'guide_controller.dart';
+import '../../../core/di/injection.dart';
 import '../../../shared/widgets/jogja_page_header.dart';
+import '../../auth/data/auth_local_datasource.dart';
 
 class GuideScreen extends ConsumerStatefulWidget {
   const GuideScreen({this.initialPrompt, super.key});
@@ -22,10 +24,13 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
   final _scrollController = ScrollController();
 
   bool _sending = false;
+  String _displayName = 'Penjelajah Jogja';
 
   @override
   void initState() {
     super.initState();
+
+    _loadUserName();
 
     if (widget.initialPrompt != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,6 +45,12 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = await getIt<AuthLocalDataSource>().currentUser();
+    if (!mounted || user == null) return;
+    setState(() => _displayName = user.name.trim().isEmpty ? 'Penjelajah Jogja' : user.name.trim());
   }
 
   Future<void> _send() async {
@@ -69,10 +80,6 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
     }
   }
 
-  void _useSuggestion(String value) {
-    _controller.text = value;
-    _send();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,8 +105,7 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
               child: JogjaPageHeader(
-                title: 'Guide AI',
-                subtitle: 'Tanya rekomendasi wisata dengan gaya pemandu Jogja.',
+                title: 'Kanca Jogja',
                 trailing: _CircleButton(
                   icon: CupertinoIcons.trash,
                   onTap: () {
@@ -109,39 +115,47 @@ class _GuideScreenState extends ConsumerState<GuideScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            _SuggestionRow(onSelected: _useSuggestion),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Expanded(
-              child: history.isEmpty
-                  ? const _EmptyGuideState()
-                  : ListView.builder(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: history.isEmpty
+                      ? _EmptyGuideState(displayName: _displayName)
+                      : ListView.builder(
                       controller: _scrollController,
                       reverse: true,
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                       itemCount: history.length,
-                      itemBuilder: (context, index) {
-                        final message = history[history.length - index - 1];
+                          itemBuilder: (context, index) {
+                            final message = history[history.length - index - 1];
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: message.isUser
-                              ? _UserBubble(message: message.text)
-                              : _AiBubble(
-                                  message: message.text,
-                                  loading: message.text.trim().isEmpty,
-                                ),
-                        );
-                      },
-                    ),
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: message.isUser
+                                  ? _UserBubble(message: message.text)
+                                  : _AiBubble(
+                                      message: message.text,
+                                      loading: message.text.trim().isEmpty,
+                                    ),
+                            );
+                          },
+                        ),
+                ),
+              ),
             ),
-            Padding(
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
-              child: _GuideInputBar(
-                controller: _controller,
-                sending: _sending,
-                onSend: _send,
+                  child: _GuideInputBar(
+                    controller: _controller,
+                    sending: _sending,
+                    onSend: _send,
+                  ),
+                ),
               ),
             ),
           ],
@@ -183,7 +197,7 @@ class _GuideHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Guide AI',
+                'Kanca Jogja',
                 style: AppTypography.displayBold34.copyWith(
                   color: AppColors.textPrimary,
                   fontSize: 31,
@@ -192,7 +206,7 @@ class _GuideHeader extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tanya itinerary, kuliner, budaya, dan hidden gems Jogja.',
+                'Ngobrol dengan kanca pemandu Jogja.',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.textRegular13.copyWith(
@@ -213,64 +227,16 @@ class _GuideHeader extends StatelessWidget {
   }
 }
 
-class _SuggestionRow extends StatelessWidget {
-  const _SuggestionRow({required this.onSelected});
-
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    const suggestions = [
-      'Itinerary Jogja 1 hari',
-      'Kuliner murah',
-      'Hidden gems',
-      'Wisata budaya',
-    ];
-
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        itemCount: suggestions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
-        itemBuilder: (context, index) {
-          final value = suggestions[index];
-
-          return CupertinoButton(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            onPressed: () => onSelected(value),
-            child: GlassCard(
-              blur: 24,
-              opacity: 0.07,
-              borderRadius: 999,
-              borderColor: CupertinoColors.white.withOpacity(0.10),
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-              child: Text(
-                value,
-                style: AppTypography.captionSmall11.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class _EmptyGuideState extends StatelessWidget {
-  const _EmptyGuideState();
+  const _EmptyGuideState({required this.displayName});
+
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 34),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: GlassCard(
           blur: 32,
           opacity: 0.072,
@@ -281,13 +247,13 @@ class _EmptyGuideState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                CupertinoIcons.map,
+                CupertinoIcons.sparkles,
                 size: 34,
                 color: AppColors.accentTertiary,
               ),
               const SizedBox(height: 14),
               Text(
-                'Mau eksplor Jogja ke mana?',
+                'Sugeng rawuh, $displayName.',
                 textAlign: TextAlign.center,
                 style: AppTypography.displaySemi22.copyWith(
                   color: AppColors.textPrimary,
@@ -296,7 +262,7 @@ class _EmptyGuideState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Coba tanya rute wisata, itinerary, kuliner, atau rekomendasi tempat berdasarkan mood perjalananmu.',
+                'Monggo tanya apa saja tentang Jogja. Kula bisa bantu rekomendasi wisata, kuliner, cerita sejarah, rute jalan-jalan, sampai info terbaru bila tersedia.',
                 textAlign: TextAlign.center,
                 style: AppTypography.textRegular13.copyWith(
                   color: AppColors.textSecondary,
@@ -418,8 +384,8 @@ class _GuideInputBar extends StatelessWidget {
             child: CupertinoTextField.borderless(
               controller: controller,
               minLines: 1,
-              maxLines: 4,
-              placeholder: 'Ask Guide AI...',
+              maxLines: 3,
+              placeholder: 'Tanya Jogja di sini, monggo...',
               placeholderStyle: AppTypography.textRegular13.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 14,

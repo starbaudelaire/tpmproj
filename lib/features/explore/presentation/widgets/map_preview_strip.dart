@@ -107,7 +107,7 @@ class MapPreviewStrip extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Interactive LBS Map',
+                    'Jelajah Sekitarmu',
                     style: AppTypography.displaySemi20.copyWith(
                       color: AppColors.textPrimary,
                       fontSize: 18,
@@ -139,7 +139,7 @@ class MapPreviewStrip extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Open',
+                          'Buka Peta',
                           style: AppTypography.captionSmall11.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -208,8 +208,8 @@ class MapPreviewStrip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
             child: Text(
               hasUserLocation
-                  ? 'Marker biru = posisi kamu. Tap pin destinasi untuk membuka navigasi.'
-                  : 'Lokasi belum aktif, peta memakai pusat Yogyakarta. Tap pin destinasi untuk membuka navigasi.',
+                  ? 'Lihat tempat menarik di dekatmu dan pilih destinasi yang ingin kamu kunjungi.'
+                  : 'Aktifkan lokasi agar Kanca Jogja bisa menunjukkan tempat menarik di sekitarmu.',
               style: AppTypography.captionSmall11.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.35,

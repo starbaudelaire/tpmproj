@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/destination_image_resolver.dart';
 
 class ParallaxHero extends StatelessWidget {
   const ParallaxHero({
@@ -50,23 +51,39 @@ class ParallaxHero extends StatelessWidget {
           child: toHeroContext.widget,
         );
       },
-      child: CachedNetworkImage(
-        imageUrl: safeImageUrl,
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: CupertinoColors.white.withOpacity(0.05),
-        ),
-        errorWidget: (context, url, error) => Container(
-          color: CupertinoColors.white.withOpacity(0.05),
-          child: const Center(
-            child: Icon(
-              CupertinoIcons.photo,
-              color: AppColors.textSecondary,
-              size: 28,
+      child: DestinationImageResolver.isAsset(safeImageUrl)
+          ? Image.asset(
+              safeImageUrl,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _HeroFallback(),
+            )
+          : CachedNetworkImage(
+              imageUrl: safeImageUrl,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                color: CupertinoColors.white.withOpacity(0.05),
+              ),
+              errorWidget: (context, url, error) => _HeroFallback(),
             ),
-          ),
+    );
+  }
+}
+
+
+class _HeroFallback extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: CupertinoColors.white.withOpacity(0.05),
+      child: const Center(
+        child: Icon(
+          CupertinoIcons.photo,
+          color: AppColors.textSecondary,
+          size: 28,
         ),
       ),
     );

@@ -11,19 +11,33 @@ import 'widgets/currency_converter_view.dart';
 import 'widgets/time_converter_view.dart';
 import '../../../shared/widgets/jogja_page_header.dart';
 
-final currencyRatesProvider = FutureProvider<Map<String, double>>(
-  (ref) => CurrencyRemoteDataSource(dio: getIt(), prefs: getIt()).fetchRates(),
-);
+final currencyRefreshTickProvider = StateProvider<int>((ref) => 0);
+
+final currencyRatesProvider = FutureProvider<CurrencyRatesResult>((ref) {
+  final tick = ref.watch(currencyRefreshTickProvider);
+  return CurrencyRemoteDataSource(
+    dio: getIt(),
+    prefs: getIt(),
+  ).fetchRates(forceRefresh: tick > 0);
+});
 
 class ConverterScreen extends ConsumerStatefulWidget {
-  const ConverterScreen({super.key});
+  const ConverterScreen({super.key, this.initialMode = 'currency'});
+
+  final String initialMode;
 
   @override
   ConsumerState<ConverterScreen> createState() => _ConverterScreenState();
 }
 
 class _ConverterScreenState extends ConsumerState<ConverterScreen> {
-  String mode = 'currency';
+  late String mode;
+
+  @override
+  void initState() {
+    super.initState();
+    mode = widget.initialMode == 'time' ? 'time' : 'currency';
+  }
 
   static const _bgTop = Color(0xFF181821);
   static const _bgMid = Color(0xFF0F0F16);
@@ -57,7 +71,7 @@ class _ConverterScreenState extends ConsumerState<ConverterScreen> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 126),
               children: [
-                const JogjaPageHeader(title: 'Konverter Wisata', subtitle: 'Cek mata uang dan waktu sebelum jalan-jalan.'),
+                const JogjaPageHeader(title: 'Konverter Wisata', subtitle: 'Cek kurs dan waktu sebelum jalan-jalan.'),
                 const SizedBox(height: 18),
                 _ModeSwitch(
                   mode: mode,
@@ -72,7 +86,10 @@ class _ConverterScreenState extends ConsumerState<ConverterScreen> {
                       ? rates.when(
                           data: (value) => CurrencyConverterView(
                             key: const ValueKey('currency'),
-                            rates: value,
+                            rates: value.rates,
+                            updatedAt: value.updatedAt,
+                            fromFallback: value.fromFallback,
+                            onRefresh: () => ref.read(currencyRefreshTickProvider.notifier).state++,
                           ),
                           loading: () => const LoadingSkeleton(height: 260),
                           error: (_, __) => const _ErrorCard(),
@@ -194,7 +211,7 @@ class _ModeSwitch extends StatelessWidget {
             children: [
               Expanded(
                 child: _ModeItem(
-                  label: 'Currency',
+                  label: 'Kurs',
                   icon: CupertinoIcons.money_dollar_circle,
                   selected: isCurrency,
                   onTap: () => onChanged('currency'),
@@ -202,7 +219,7 @@ class _ModeSwitch extends StatelessWidget {
               ),
               Expanded(
                 child: _ModeItem(
-                  label: 'Time',
+                  label: 'Waktu',
                   icon: CupertinoIcons.clock,
                   selected: !isCurrency,
                   onTap: () => onChanged('time'),

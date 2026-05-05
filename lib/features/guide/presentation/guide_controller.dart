@@ -63,7 +63,7 @@ class ChatController extends StateNotifier<List<ChatMessage>> {
         state = [
           ...state.sublist(0, state.length - 1),
           const ChatMessage(
-            text: 'Guide AI belum mengembalikan jawaban. Coba kirim ulang.',
+            text: 'Kanca Jogja belum mengembalikan jawaban. Coba kirim ulang.',
             isUser: false,
           ),
         ];
@@ -75,7 +75,7 @@ class ChatController extends StateNotifier<List<ChatMessage>> {
         ...state.sublist(0, state.length - 1),
         const ChatMessage(
           text:
-              'Guide AI sedang tidak bisa dihubungi. Coba cek koneksi, API key, atau jalankan lewat Android jika web terkena CORS.',
+              'Kanca Jogja sedang tidak bisa dihubungi. Coba cek koneksi, API key, atau jalankan lewat Android jika web terkena CORS.',
           isUser: false,
         ),
       ];

@@ -21,7 +21,7 @@ class InfoStrip extends StatelessWidget {
         Expanded(
           child: _InfoTile(
             icon: CupertinoIcons.clock,
-            label: 'Open',
+            label: 'Jam Buka',
             value: DestinationDisplayUtil.compactOpenHours(destination.openHours),
           ),
         ),
@@ -29,16 +29,16 @@ class InfoStrip extends StatelessWidget {
         Expanded(
           child: _InfoTile(
             icon: CupertinoIcons.money_dollar,
-            label: 'Ticket',
-            value: destination.ticketPrice,
+            label: 'Tiket',
+            value: DestinationDisplayUtil.compactPrice(destination.ticketPrice),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _InfoTile(
             icon: CupertinoIcons.location_solid,
-            label: 'Duration',
-            value: '2–3 jam',
+            label: 'Durasi',
+            value: destination.recommendedDuration.trim().isEmpty ? 'Cek waktu' : destination.recommendedDuration,
           ),
         ),
       ],
@@ -66,7 +66,7 @@ class _InfoTile extends StatelessWidget {
       borderColor: CupertinoColors.white.withOpacity(0.12),
       padding: EdgeInsets.zero,
       child: Container(
-        height: 82,
+        height: 104,
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,8 +89,8 @@ class _InfoTile extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              overflow: TextOverflow.visible,
               style: AppTypography.textRegular13.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w400,

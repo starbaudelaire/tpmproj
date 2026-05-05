@@ -47,7 +47,7 @@ abstract final class ApiErrorMapper {
     }
     if (type == DioExceptionType.connectionError ||
         type == DioExceptionType.unknown) {
-      return 'Tidak dapat terhubung ke server. Pastikan backend berjalan dan alamat server benar.';
+      return 'Belum bisa tersambung. Coba cek koneksi atau nyalakan layanan aplikasinya.';
     }
 
     switch (status) {
