@@ -1,0 +1,67 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related (Biar config lokal elu kagak bentrok ama team)
+.vscode/
+
+# Flutter / Dart / Pub related (Di-strict semua level folder)
+**/doc/api/
+**/.dart_tool/
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Local Cache Database / State related
+**/.hive/
+*.hive
+*.lock
+
+# iOS specific artifacts (Ini nih biasanya yang bikin bengkak parah)
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/DerivedData/
+*.moved-aside
+
+# Android Studio & Gradle related build artifacts
+**/android/.gradle/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+app.*.symbols
+app.*.map.json
+
+# Web related artifacts
+**/web/flutter_bootstrap.js
+
+# Environment secrets / Credentials (Wajib aman!)
+.env
+*.env
+.env.*
+backend/.env
+**/ios/Flutter/ephemeral/
